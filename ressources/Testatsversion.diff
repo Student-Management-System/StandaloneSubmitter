@@ -1,0 +1,56 @@
+### Eclipse Workspace Patch 1.0
+#P StandaloneSubmitter
+Index: src/de/uni_hildesheim/sse/submitter/conf/ConfigReader.java
+===================================================================
+--- src/de/uni_hildesheim/sse/submitter/conf/ConfigReader.java	(revision 759)
++++ src/de/uni_hildesheim/sse/submitter/conf/ConfigReader.java	(working copy)
+@@ -45,48 +45,8 @@
+      * @return The configuration for submitting the project to the submission server.
+      */
+     public static Configuration read(File configDestination) {
+-        Configuration config = null;
+-        Properties prop = new Properties();
+-        InputStream input = null;
++        Configuration config = new Configuration("", "", "", "", null);
+ 
+-        try {
+-
+-            if (!configDestination.exists()) {
+-                try {
+-                    configDestination.getParentFile().mkdirs();
+-                    configDestination.createNewFile();
+-                } catch (IOException e) {
+-                    configDestination = null;
+-                }
+-            }
+-            
+-            if (configDestination != null && configDestination.exists()) {
+-                input = new FileInputStream(configDestination);
+-    
+-                // load a properties file
+-                prop.load(input);
+-    
+-                String group = readProperties(prop, GROUP);
+-                String user = readProperties(prop, USER);
+-                String pw = readProperties(prop, PW);
+-                String exercise = readProperties(prop, EXERCISE);
+-    
+-                config = new Configuration(group, user, pw, exercise, configDestination);
+-            } else {
+-                config = new Configuration("", "", "", "", null);
+-            }
+-        } catch (IOException ex) {
+-            ex.printStackTrace();
+-        } finally {
+-            if (input != null) {
+-                try {
+-                    input.close();
+-                } catch (IOException e) {
+-                    e.printStackTrace();
+-                }
+-            }
+-        }
+-
+         return config;
+     }
+ 

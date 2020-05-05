@@ -1,0 +1,203 @@
+<project name="ExerciseSubmitter" default="all" xmlns:jacoco="antlib:org.jacoco.ant" xmlns:cs="antlib:com.puppycrawl.tools.checkstyle.ant">
+  <property name="base" value="."/>
+  <property name="src" value="${base}/src"/>
+  <property name="src.test" value="${base}/test"/>
+  <property name="bin" value="${base}/out"/>
+  <property name="bin.test" value="${base}/out_test"/>
+  <property name="lib" value="libs"/>
+  <property name="res" value="${base}/ressources"/>
+  <property name="res.internal" value="${base}/internalRes"/>
+  <property name="scripts" value="${base}/scripts"/>
+	<property name="destination" value="${base}/build"/>
+	<property name="reports" value="${base}/reports"/>
+	<property name="user.home.lib" value="${user.home}/.ant/lib"/>
+
+	<path id="libs.path">
+        <fileset dir="libs">
+            <include name="svnkit-1.10.1.jar"/>
+            <include name="sqljet-1.1.12.jar"/>
+            <include name="sequence-library-1.0.4.jar"/>
+            <include name="commons-io-2.4.jar"/>
+            <include name="antlr-runtime-3.4.jar"/>
+            <include name="lib/lz4-java-1.4.1.jar"/>
+        </fileset>
+    </path>
+	
+  <target name="init" >
+      <delete dir="${bin}"/>
+      <delete dir="${bin}"/>
+      <delete dir="${destination}"/>
+      <delete dir="${reports}"/>
+      <mkdir dir="${bin}"/>
+      <mkdir dir="${bin.test}"/>
+      <mkdir dir="${destination}"/>
+      <mkdir dir="${reports}"/>
+  </target>
+	
+	<!--
+	    Requires that the contents of https://projects.sse.uni-hildesheim.de/tools/ant-lib.zip
+	    exist at <user_home>/.ant/lib
+	    The "build.dependencies.download" target automatically does this. 
+	    To execute this script from Eclipse, it is required that the jars in this folder are also added via:
+	    Window -> Preferences -> Ant -> Runtime -> Global Entries -> Add External JARs...
+	  -->
+	  <path id="classpath.testing">
+	    <pathelement location="${bin}" />
+	    <pathelement location="${bin.test}" />
+	    <fileset dir="${lib}" />
+	    
+	    <!-- Loads Junit from ANT installation folder -->
+	    <fileset dir="${user.home.lib}">
+	      <include name="junit*.jar" />
+	      <include name="hamcrest*.jar" />
+	    </fileset>
+	  </path>
+	
+	  <!-- Check if required jar files are available in <user_home>/.ant/lib -->
+	  <target name="build.dependencies.check">
+	    <mkdir dir="${user.home.lib}" />
+	    <condition property="build.dependencies.exist">
+	      <and>
+	        <resourcecount when="greater" count="0">
+	          <fileset dir="${user.home.lib}" includes="junit*.jar" />
+	        </resourcecount>
+	        <resourcecount when="greater" count="0">
+	          <fileset dir="${user.home.lib}" includes="hamcrest*.jar" />
+	        </resourcecount>
+	        <resourcecount when="greater" count="0">
+	          <fileset dir="${user.home.lib}" includes="jacocoant*.jar" />
+	        </resourcecount>
+	        <resourcecount when="greater" count="0">
+	          <fileset dir="${user.home.lib}" includes="checkstyle*.jar" />
+	        </resourcecount>
+	      </and>
+	    </condition>
+	  </target>
+	
+    <!-- Download build dependencies and move them to <user_home>/.ant/lib (may require that ant is restarted) -->
+	  <target name="build.dependencies.download" unless="${build.dependencies.exist}" depends="build.dependencies.check">
+	    <get src="https://projects.sse.uni-hildesheim.de/tools/ant-lib.zip" dest="ant-lib.zip" />
+	    <mkdir dir="${user.home.lib}" />
+	    <unzip src="ant-lib.zip" dest="${user.home.lib}" />
+	    <delete file="ant-lib.zip" />
+	  </target>
+
+    <target name="compile" depends="init" description="compiles the class files">
+      <mkdir dir="${bin}"/>
+    	<echo message="${toString:libs.path}"/>
+    	<javac srcdir="${src}" destdir="${bin}" debug="on" includeantruntime="false" classpathref="libs.path" compiler="modern" encoding="UTF-8" />
+    	<copy todir="${bin}">
+            <fileset dir="${src}">
+                <include name="**/*.properties"/>
+            </fileset>
+    		<fileset dir="${res.internal}">
+    			<include name="**/*"/>
+    		</fileset>
+        </copy>
+    </target>
+	
+	<target name="test.compile">
+	    <javac destdir="${bin.test}" debug="yes" includeantruntime="false">
+	      <src path="${src.test}" />
+	      <classpath refid="classpath.testing" />
+	    </javac>
+	  </target>
+
+	  <target name="test" depends="test.compile">
+	    <!-- Copy testdata, otherwise they won't be found during the test execution -->
+	    <!-- <copy todir="${test.classes.dir}/testdata">
+	      <fileset dir="testdata" />
+	    </copy> -->
+
+	    <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml" />
+	    <jacoco:coverage destfile="${reports}/jacoco.exec">
+	      <junit fork="yes" dir="${bin.test}" failureProperty="test.failed">
+	        <classpath refid="classpath.testing" />
+
+	        <formatter type="xml" />
+	        <test name="${testcase}" todir="${reports}" if="testcase" />
+	        <batchtest todir="${reports}" unless="testcase">
+	          <!-- include all Tests -->
+	          <fileset dir="${src.test}">
+	            <include name="**/AllTests.java" />
+	          </fileset>
+
+	          <!-- include all resources from the src-package-folders -->
+	          <fileset dir="${src}">
+	            <exclude name="**/*.java" />
+	          </fileset>
+	        </batchtest>
+	      </junit>
+	    </jacoco:coverage>
+	    <!-- JUnit Report in HTML -->
+	    <junitreport todir="${reports}">
+	      <fileset dir="${reports}">
+	        <include name="TEST-*.xml" />
+	      </fileset>
+	      <report format="frames" todir="${reports}" />
+	    </junitreport>
+	  </target>
+	
+	  <target name="test.report" depends="test">
+	    <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml" />
+	    <jacoco:report>
+	      <executiondata>
+	        <file file="${reports}/jacoco.exec" />
+	      </executiondata>
+
+	      <structure name="${ant.project.name}">
+	        <classfiles>
+	          <fileset dir="${bin}" />
+	        </classfiles>
+	        <sourcefiles encoding="UTF-8">
+	          <fileset dir="${src}" />
+	        </sourcefiles>
+	      </structure>
+	    </jacoco:report>
+	  </target>
+    
+    <target name="jar" depends="compile" description="creates the binary archive for the jSvnSubmitHook server">
+      <delete file="${bin}/${ant.project.name}.jar"/>
+    	<jar jarfile="${bin}/${ant.project.name}.jar" basedir="${bin}"
+            excludes="${ant.project.name}.jar **/*.html META_INF/** **/package-info.class">
+    		<manifest>
+    		    <attribute name="Main-Class" value="de.uni_hildesheim.sse.submitter.Starter"/>
+    		    <attribute name="Class-Path" value=". lib/svnkit-1.10.1.jar lib/sqljet-1.1.12.jar lib/sequence-library-1.0.4.jar lib/commons-io-2.4.jar lib/antlr-runtime-3.4.jar lib/lz4-java-1.4.1.jar"/>
+    		</manifest>
+        </jar>
+    </target>
+	
+	<target name="deploy" depends="jar">
+		<copy todir="${destination}">
+	        <fileset dir="${bin}">
+			  	<include name="${ant.project.name}.jar"/>
+			</fileset>
+	        <fileset dir="${res}">
+	        	<include name="*.pdf"/>
+	        </fileset>
+	        <fileset dir="${scripts}">
+	        	<include name="*.*"/>
+	        </fileset>            
+		</copy>
+		<mkdir dir="${destination}/lib"/>
+		<copy todir="${destination}/lib">
+	        <fileset dir="${lib}">
+	        	<include name="svnkit-1.10.1.jar"/>
+	            <include name="sqljet-1.1.12.jar"/>
+	            <include name="sequence-library-1.0.4.jar"/>
+	            <include name="commons-io-2.4.jar"/>
+	        	<include name="antlr-runtime-3.4.jar"/>
+                <include name="lz4-java-1.4.1.jar"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="zip" depends="deploy">
+		<zip destfile="${destination}/${ant.project.name}.zip" basedir="${destination}" />
+	</target>
+	
+	<target name="all">
+		<antcall target="zip" />
+		<antcall target="test.report" />
+	</target>
+</project>
