@@ -129,13 +129,6 @@
 	        </batchtest>
 	      </junit>
 	    </jacoco:coverage>
-	    <!-- JUnit Report in HTML -->
-	    <junitreport todir="${reports}">
-	      <fileset dir="${reports}">
-	        <include name="TEST-*.xml" />
-	      </fileset>
-	      <report format="frames" todir="${reports}" />
-	    </junitreport>
 	  </target>
 	
 	  <target name="test.report" depends="test">
