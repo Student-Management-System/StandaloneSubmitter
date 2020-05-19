@@ -155,7 +155,7 @@
 	    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" />
 
 	    <checkstyle config="checkstyle.xml" failOnViolation="false">
-	      <fileset dir="${src.dir}" includes="**/*.java" />
+	      <fileset dir="${src}" includes="**/*.java" />
 	      <formatter type="xml" toFile="${reports}/checkstyle_errors.xml" />
 	    </checkstyle>
 	  </target>
