@@ -204,5 +204,6 @@
 	<target name="all">
 		<antcall target="zip" />
 		<antcall target="test.report" />
+		<antcall target="checkstyle" />
 	</target>
 </project>
