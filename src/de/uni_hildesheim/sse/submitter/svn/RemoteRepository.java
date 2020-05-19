@@ -25,7 +25,7 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 
 import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
-import de.uni_hildesheim.sse.submitter.settings.Settings;
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 
 /**
  * Contains methods to fetch information from the remote repository.
@@ -51,7 +51,7 @@ public class RemoteRepository {
     public RemoteRepository(Configuration config) throws ServerNotFoundException {
         this.config = config;
         
-        target = Settings.getSettings("server.url", "https://praktikum.sse.uni-hildesheim.de/javaI/abgabe/");
+        target = ToolSettings.getConfig().getRepositoryURL();
         try {
             SVNURL url = SVNURL.parseURIEncoded(target);
             repository = SVNRepositoryFactory.create(url);
@@ -59,7 +59,7 @@ public class RemoteRepository {
             throw new ServerNotFoundException(target);
         }
         repository.setAuthenticationManager(
-                new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW())
+            new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW())
         );
     }
     

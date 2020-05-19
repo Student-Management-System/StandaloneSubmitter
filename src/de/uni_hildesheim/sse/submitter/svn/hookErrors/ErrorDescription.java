@@ -1,7 +1,8 @@
 package de.uni_hildesheim.sse.submitter.svn.hookErrors;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.settings.Settings;
+import de.uni_hildesheim.sse.submitter.settings.HookMessageSettings;
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 
 /**
  * Data class, describing a returned error.
@@ -10,18 +11,6 @@ import de.uni_hildesheim.sse.submitter.settings.Settings;
  * 
  */
 public class ErrorDescription {
-
-    private static final String NO_JAVA_FILES_SUBMITTED = Settings.getSettings("hook.msg.commit.nojava",
-        "No Java file submitted.");
-    
-    private static final String TABS_INCLUDED = Settings.getSettings("hook.msg.commit.nojava",
-        "hook.msg.commit.containsTabs");
-    
-    private static final String MISSING_JAVA_DOC = Settings.getSettings("hook.msg.commit.missingJavaDoc",
-        "Missing a Javadoc comment.");
-    
-    private static final String UNKNOWN_ERROR = Settings.getSettings("hook.msg.commit.checkError",
-            "Missing a Javadoc comment.");
 
     private ErrorType type;
     private SeverityType severity;
@@ -109,6 +98,14 @@ public class ErrorDescription {
     public void setCode(String code) {
         this.code = code;
     }
+    
+    /**
+     * Short hand to retrieve the settings for the submission hook.
+     * @return The settings for the submission hook.
+     */
+    private HookMessageSettings getConfig() {
+        return ToolSettings.getConfig().getCommitMessages();
+    }
 
 
     /**
@@ -116,13 +113,13 @@ public class ErrorDescription {
      * @param solution The "message" attribute of the hook error message.
      */
     public void setSolution(String solution) {
-        if (NO_JAVA_FILES_SUBMITTED.equals(solution)) {
+        if (getConfig().getMissingJava().equals(solution)) {
             this.solution = I18nProvider.getText("errors.messages.no_java_submitted");
-        } else if (TABS_INCLUDED.equals(solution)) {
+        } else if (getConfig().getContainsTabs().equals(solution)) {
             this.solution = I18nProvider.getText("errors.messages.tabs_included");
-        } else if (MISSING_JAVA_DOC.equals(solution)) {
+        } else if (getConfig().getMissingJavaDoc().equals(solution)) {
             this.solution = I18nProvider.getText("errors.messages.missingJavaDoc");
-        } else if (UNKNOWN_ERROR.equals(solution)) {
+        } else if (getConfig().getCheckError().equals(solution)) {
             this.solution = I18nProvider.getText("error.unknownError");
         } else {
             this.solution = solution;

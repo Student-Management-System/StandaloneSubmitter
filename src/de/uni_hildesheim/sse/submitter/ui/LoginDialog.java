@@ -23,6 +23,7 @@ import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.ServerNotFoundException;
+import net.ssehub.exercisesubmitter.protocol.backend.LoginComponent;
 
 /**
  * A dialog where group name, name and password can be specified.
@@ -39,6 +40,8 @@ class LoginDialog extends JDialog implements ActionListener {
     private Configuration config;
     
     private RemoteRepository repository;
+    
+    private LoginComponent login;
     
     /*
      * GUI components
@@ -129,6 +132,7 @@ class LoginDialog extends JDialog implements ActionListener {
         config.setPW(new String(passwordField.getPassword()));
         
         String errorMessage = null;
+       
         try {
             repository = new RemoteRepository(config);
             // get repository list here to test if login information are correct

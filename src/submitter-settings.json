@@ -1,0 +1,29 @@
+{
+  "programName": "Exercise Submitter",
+  "programVersion": "v2.0.0",
+  "repositoryURL": "https://praktikum.sse.uni-hildesheim.de/abgaben/abgabe/",
+  "repositorySendsXmlAnswers": true,
+  "repositoryConnectionError": "Server or server communication error. Please contact the supervisors.",
+  "mgmtURL": "http://http://147.172.178.30:8080/stmgmt",
+  "authURL": "http://147.172.178.30:8080",
+  "courseTeamName": "JAVA I Team",
+  "courseTeamMail": "programmierung1@uni-hildesheim.de",
+  "commitMessages": {
+    "failed": "Commit failed (details follow):",
+    "blocked": "Commit blocked by pre-commit hook (exit code 1) with output:\\n",
+    "missingJava": "No Java file submitted.",
+    "containsTabs": "File contains tab characters (this is the first instance).",
+    "missingJavaDoc": "Missing a Javadoc comment.",
+    "checkError": "A check error was detected but no concrete error message was emitted. Please contact the supervisors."
+  },
+  "colorSettings": {
+    "defaultColor": "#000000",
+    "javacColor": "#8A008A",
+    "checkstyleColor": "#FF1493",
+    "junitColor": "#000080",
+    "commitColor": "#7FFF00",
+    "errorColor": "#E60000",
+    "warningColor": "#FFD119",
+    "hookColor": "#7A007A"
+  }
+}
