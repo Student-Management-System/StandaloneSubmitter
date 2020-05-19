@@ -22,7 +22,7 @@ public class I18nProviderTest {
         // Test of the English language
         Locale.setDefault(Locale.US); 
         String actualValue = I18nProvider.getText("Menu.submissionMenu");
-        Assert.assertEquals("Wrong value returned for Menu.submissionMenu" ,"Exercise Submission", actualValue);
+        Assert.assertEquals("Wrong value returned for Menu.submissionMenu", "Exercise Submission", actualValue);
     }
 
 }
