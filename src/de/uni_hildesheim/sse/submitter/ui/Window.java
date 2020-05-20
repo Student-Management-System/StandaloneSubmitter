@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -17,20 +18,21 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.tmatesoft.svn.core.SVNAuthenticationException;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.conf.ConfigReader;
 import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.settings.Settings;
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
+import de.uni_hildesheim.sse.submitter.settings.UiColorSettings;
 import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
 import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
-import de.uni_hildesheim.sse.submitter.svn.ServerNotFoundException;
 import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * Main window for the submitter.
@@ -58,20 +60,27 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     private SubmissionResultHandler translator;
     private Configuration config;
     private RemoteRepository repository;
+    private SubmitterProtocol protocol;
 
     /**
      * Sole constructor for this class.
      */
     public Window() {
         // Set window properties
-        String title = Settings.getSettings("prog.name", "ExerciseSubmitter");
-        String version = Settings.getSettings("prog.version");
+        String title = ToolSettings.getConfig().getProgramName();
+        String version = ToolSettings.getConfig().getProgramVersion();
         if (null != version) {
             title += " - v" + version;
         }
         setTitle(title);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(600, 500);
+        protocol = new SubmitterProtocol(ToolSettings.getConfig().getAuthURL(), ToolSettings.getConfig().getMgmtURL(),
+            ToolSettings.getConfig().getCourse().getCourse());
+        String semester = ToolSettings.getConfig().getCourse().getSemester();
+        if (null != semester) {
+            protocol.setSemester(semester);
+        }
         
         // Initialize components
         initComponents();
@@ -84,8 +93,12 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         LoginDialog dialog = new LoginDialog(this);
         repository = dialog.getRepository();
         try {
-            setRepositoryList(repository.getRepositories(RemoteRepository.MODE_SUBMISSION));
-        } catch (ServerNotFoundException | SVNAuthenticationException e) {
+            List<String> assignments = new ArrayList<>();
+            protocol.getOpenAssignments().stream()
+                .map(a -> a.getName())
+                .forEach(s -> assignments.add(s));
+            setRepositoryList(assignments);
+        } catch (NetworkException e) {
             // This shouldn't happen here... (since it worked in LoginDialog)
             showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
         }
@@ -95,6 +108,14 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             sourceDirectoryField.setText(new File("example").getAbsolutePath());
             submit();
         }
+    }
+    
+    /**
+     * Returns the network protocol to communicate with the <b>student management system</b> via it's REST interface.
+     * @return The network protocol for the REST server.
+     */
+    public SubmitterProtocol getNetworkProtocol() {
+        return protocol;
     }
     
     /**
@@ -311,10 +332,18 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         toggleButtons(true);
     }
 
+    /**
+     * Short hand method to retrieve the color settings for the application.
+     * @return The color settings of the tool.
+     */
+    private UiColorSettings colors() {
+        return ToolSettings.getConfig().getColorSettings();
+    }
+    
     @Override
     public void showErrorMessage(String message) {
         logArea.append(I18nProvider.getText("errors.messages.error") + ": " + message,
-                Settings.getSettings("ui.log.error.color"), true);
+            colors().getErrorColor(), true);
     }
 
     @Override
@@ -336,24 +365,24 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             if (null != description.getType()) {
                 switch (description.getType()) {
                 case JAVAC:
-                    logArea.append(I18nProvider.getText("gui.log.compile") + " "
-                            , Settings.getSettings("ui.log.javac.color"), true);
+                    logArea.append(I18nProvider.getText("gui.log.compile") + " ",
+                        colors().getJavacColor(), true);
                     break;
                 case CHECKSTYLE:
-                    logArea.append(I18nProvider.getText("gui.log.checkstyle") + " "
-                            , Settings.getSettings("ui.log.checkstyle.color"), true);
+                    logArea.append(I18nProvider.getText("gui.log.checkstyle") + " ",
+                        colors().getCheckstyleColor(), true);
                     break;
                 case JUNIT:
-                    logArea.append(I18nProvider.getText("gui.log.logic") + " "
-                            , Settings.getSettings("ui.log.junit.color"), true);
+                    logArea.append(I18nProvider.getText("gui.log.logic") + " ",
+                        colors().getJunitColor(), true);
                     break;
                 case COMMIT:
-                    logArea.append(I18nProvider.getText("gui.log.commit") + " "
-                            , Settings.getSettings("ui.log.commit.color"), true);
+                    logArea.append(I18nProvider.getText("gui.log.commit") + " ",
+                        colors().getCommitColor(), true);
                     break;
                 case HOOK:
-                    logArea.append(I18nProvider.getText("gui.log.hook") + " "
-                            , Settings.getSettings("ui.log.hook.color"), true);
+                    logArea.append(I18nProvider.getText("gui.log.hook") + " ",
+                        colors().getHookColor(), true);
                     break;
                 default:
                     break;
@@ -362,12 +391,12 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             if (null != description.getSeverity()) {
                 switch (description.getSeverity()) {
                 case ERROR:
-                    logArea.append(I18nProvider.getText("gui.log.error_in") + " "
-                            , Settings.getSettings("ui.log.error.color"), false);
+                    logArea.append(I18nProvider.getText("gui.log.error_in") + " ",
+                        colors().getErrorColor(), false);
                     break;
                 case WARNING:
-                    logArea.append(I18nProvider.getText("gui.log.warning_in") + " "
-                            , Settings.getSettings("ui.log.warning.color"), false);
+                    logArea.append(I18nProvider.getText("gui.log.warning_in") + " ",
+                        colors().getWarningColor(), false);
                     break;
                 default:
                     logArea.append(I18nProvider.getText("gui.log.prolem_in") + " ");

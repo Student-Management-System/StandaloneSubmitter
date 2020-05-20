@@ -1,13 +1,17 @@
 {
   "programName": "Exercise Submitter",
-  "programVersion": "v2.0.0",
+  "programVersion": "2.0.0",
   "repositoryURL": "https://praktikum.sse.uni-hildesheim.de/abgaben/abgabe/",
   "repositorySendsXmlAnswers": true,
   "repositoryConnectionError": "Server or server communication error. Please contact the supervisors.",
-  "mgmtURL": "http://http://147.172.178.30:8080/stmgmt",
+  "mgmtURL": "http://147.172.178.30:8080/stmgmt",
   "authURL": "http://147.172.178.30:8080",
-  "courseTeamName": "JAVA I Team",
-  "courseTeamMail": "programmierung1@uni-hildesheim.de",
+  "course" : {
+    "course" : "java",
+    "semester": "wise1920",
+    "teamName": "JAVA I Team",
+    "teamMail": "programmierung1@uni-hildesheim.de"
+  },
   "commitMessages": {
     "failed": "Commit failed (details follow):",
     "blocked": "Commit blocked by pre-commit hook (exit code 1) with output:\\n",

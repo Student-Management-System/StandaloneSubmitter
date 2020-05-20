@@ -78,7 +78,7 @@
 	
     <!-- Download build dependencies and move them to <user_home>/.ant/lib (may require that ant is restarted) -->
 	  <target name="build.dependencies.download" unless="${build.dependencies.exist}" depends="build.dependencies.check">
-	    <get src="https://projects.sse.uni-hildesheim.de/tools/ant-lib.zip" dest="ant-lib.zip" />
+	    <get src="https://projects.sse.uni-hildesheim.de/tools/ant-lib-v2.zip" dest="ant-lib.zip" />
 	    <mkdir dir="${user.home.lib}" />
 	    <unzip src="ant-lib.zip" dest="${user.home.lib}" />
 	    <delete file="ant-lib.zip" />

@@ -16,9 +16,7 @@ public class ToolConfiguration {
     private String mgmtURL;
     private String authURL;
     
-    private String courseTeamName;
-    private String courseTeamMail;
-    
+    private CourseSettings course;
     private HookMessageSettings commitMessages;
     private UiColorSettings colorSettings;
     
@@ -77,22 +75,6 @@ public class ToolConfiguration {
      */
     public String getAuthURL() {
         return authURL;
-    }
-    
-    /**
-     * The name of the tutors group.
-     * @return The name of the tutors group.
-     */
-    public String getCourseTeamName() {
-        return courseTeamName;
-    }
-    
-    /**
-     * The E-Mail address which is used to solve student problems.
-     * @return The E-Mail address which is used to solve student problems.
-     */
-    public String getCourseTeamMail() {
-        return courseTeamMail;
     }
     
     /**
@@ -169,22 +151,6 @@ public class ToolConfiguration {
     }
     
     /**
-     * The name of the tutors group.
-     * @param courseTeamName The name of the tutors group.
-     */
-    public void setCourseTeamName(String courseTeamName) {
-        this.courseTeamName = courseTeamName;
-    }
-    
-    /**
-     * The E-Mail address which is used to solve student problems.
-     * @param courseTeamMail The E-Mail address which is used to solve student problems.
-     */
-    public void setCourseTeamMail(String courseTeamMail) {
-        this.courseTeamMail = courseTeamMail;
-    }
-    
-    /**
      * Configuration to parse answers of the commit hook.
      * @param commitMessages Configuration to parse answers of the commit hook.
      */
@@ -198,5 +164,21 @@ public class ToolConfiguration {
      */
     public void setColorSettings(UiColorSettings colorSettings) {
         this.colorSettings = colorSettings;
+    }
+
+    /**
+     * Stores information of the course handled by the tool.
+     * @return The handled course.
+     */
+    public CourseSettings getCourse() {
+        return course;
+    }
+
+    /**
+     * Stores information of the course handled by the tool.
+     * @param course The handled course.
+     */
+    public void setCourse(CourseSettings course) {
+        this.course = course;
     }
 }
