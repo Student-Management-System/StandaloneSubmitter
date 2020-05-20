@@ -5,7 +5,7 @@ import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 
 import de.uni_hildesheim.sse.submitter.conf.Configuration;
-import de.uni_hildesheim.sse.submitter.settings.Settings;
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
 
 /**
@@ -16,18 +16,6 @@ import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
  * 
  */
 public class SubmissionResultHandler {
-
-    private static final String TEAM_NAME = Settings.getSettings("course.team.name", "JAVA I Team");
-    
-    private static final String TEAM_ADRESSE
-        = Settings.getSettings("course.team.email", "programmierung1@uni-hildesheim.de");
-    
-    private static final String HOOK_FAILED_MSG
-        = Settings.getSettings("hook.msg.commit.failed", "Commit failed (details follow):");
-    
-    private static final String HOOK_START_MSG
-        = Settings.getSettings("hook.msg.commit.blocked",
-            "Commit blocked by pre-commit hook (exit code 1) with output:\n");
 
     private ISubmissionOutputHandler handler;
 
@@ -64,8 +52,9 @@ public class SubmissionResultHandler {
             case NO_REPOSITORY_FOUND:
                 errorMsg = "Server konnte nicht erreicht werden. Bitte prüfen Sie Ihre Internetverbindung.\n"
                         + "Versuchen Sie " + commitExc.getLocation() + " im Browser aufzurufen.\n"
-                        + "Sollte dieses auch nicht erfolgreich sein, so kontaktieren Sie bitte das " + TEAM_NAME
-                        + " (" + TEAM_ADRESSE + ").";
+                        + "Sollte dieses auch nicht erfolgreich sein, so kontaktieren Sie bitte das "
+                        + ToolSettings.getConfig().getCourse().getTeamName()
+                        + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
                 break;
             case COULD_NOT_CREATE_TEMP_DIR:
                 errorMsg = "Es konnte kein Temporärerordner auf der Festplatte angelegt werden.\n";
@@ -100,17 +89,20 @@ public class SubmissionResultHandler {
                 break;
             case DO_STATUS_NOT_POSSIBLE:
                 errorMsg = "Es konnten keine Informationen über die zu submittenden Dateien gesammelt werden.\n"
-                        + "Die genaue Ursache hierfür ist unklar." + "Kontaktieren Sie bitte das " + TEAM_NAME + " ("
-                        + TEAM_ADRESSE + ").";
+                        + "Die genaue Ursache hierfür ist unklar." + "Kontaktieren Sie bitte das "
+                        + ToolSettings.getConfig().getCourse().getTeamName()
+                        + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
                 break;
             default:
-                errorMsg = "Ein unerwarter Fehler ist aufgetreten.\n" + "Kontaktieren Sie bitte das " + TEAM_NAME
-                        + " (" + TEAM_ADRESSE + ").";
+                errorMsg = "Ein unerwarter Fehler ist aufgetreten.\n" + "Kontaktieren Sie bitte das "
+                        + ToolSettings.getConfig().getCourse().getTeamName()
+                        + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
                 break;
             }
         } else {
-            errorMsg = "Ein unerwarter Fehler ist aufgetreten.\n" + "Kontaktieren Sie bitte das " + TEAM_NAME + " ("
-                    + TEAM_ADRESSE + ").";
+            errorMsg = "Ein unerwarter Fehler ist aufgetreten.\n" + "Kontaktieren Sie bitte das "
+                    + ToolSettings.getConfig().getCourse().getTeamName()
+                    + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
         }
 
         handler.showErrorMessage(errorMsg);
@@ -159,8 +151,8 @@ public class SubmissionResultHandler {
         } else {
             while (errorMsg.hasChildErrorMessage()) {
                 String error = errorMsg.getMessageTemplate();
-                if (!HOOK_FAILED_MSG.equals(error)) {
-                    error = error.substring(HOOK_START_MSG.length());
+                if (!ToolSettings.getConfig().getCommitMessages().getFailed().equals(error)) {
+                    error = error.substring(ToolSettings.getConfig().getCommitMessages().getBlocked().length());
                     result.append(error);
                     result.append("\n");
                 }

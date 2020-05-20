@@ -39,7 +39,7 @@ class SubmissionThread extends Thread {
     @Override
     public void run() {
         try {
-            Submitter submitter = new Submitter(config);
+            Submitter submitter = new Submitter(config, parent.getNetworkProtocol());
             SubmitResult result = submitter.submitFolder(projectFolder);
             translator.handleCommitResult(result.getCommitInfo());
             if (result.getNumJavFiles() <= 0) {

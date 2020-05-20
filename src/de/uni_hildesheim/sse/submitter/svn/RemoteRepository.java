@@ -160,7 +160,7 @@ public class RemoteRepository {
         File tmpDir = Files.createTempDirectory("abgabe").toFile();
         try {
             repository.checkout(revision, null, true, new ExportEditor(tmpDir));
-            tmpDir = new File(tmpDir, config.getExercise());
+            tmpDir = new File(tmpDir, config.getExercise().getName());
             tmpDir = new File(tmpDir, config.getGroup());
             if (!tmpDir.isDirectory()) {
                 throw new IOException("Temp-directory has wrong structure"); // TODO

@@ -30,6 +30,11 @@ public enum ErrorType {
     /**
      * Exercise was found on the server, but the user has no right to submit files into the specified folder.
      */
-    CANNOT_COMMIT;
+    CANNOT_COMMIT,
+    
+    /**
+     * Could not query the student management system to retrieve required information for submission.
+     */
+    COULD_NOT_QUERY_MANAGEMENT_SYSTEM;
 
 }

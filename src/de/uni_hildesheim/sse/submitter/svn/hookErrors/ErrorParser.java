@@ -14,7 +14,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.uni_hildesheim.sse.submitter.settings.Settings;
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 
 /**
  * XML PArser for an error description created by the SVN HOOK.
@@ -54,7 +54,7 @@ public class ErrorParser {
      */
     public ErrorParser(String xmlInput) {
         // Avoid errors if result is not well-formated:
-        if (Settings.getSettings("server.xml", "true").equals("true")) {
+        if (ToolSettings.getConfig().isRepositorySendsXmlAnswers()) {
             int bPos = xmlInput.indexOf(BEGIN_OF_MESSAGE);
             int ePos = xmlInput.indexOf(END_OF_MESSAGE);
             if (bPos >= 0 && ePos > 0) {
@@ -75,8 +75,7 @@ public class ErrorParser {
                     fallback = e.getMessage();
                 }
             } else {
-                fallback = Settings.getSettings("server.msg.xml.checkError",
-                    "Server or server communication problem. Please inform lecture team.");
+                fallback = ToolSettings.getConfig().getRepositoryConnectionError();
             }
         } else {
             fallback = xmlInput;

@@ -3,7 +3,6 @@ package de.uni_hildesheim.sse.submitter.ui;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -13,25 +12,29 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.tmatesoft.svn.core.SVNAuthenticationException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
-import de.uni_hildesheim.sse.submitter.svn.ServerNotFoundException;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * A dialog to review corrected exercises.
  * 
  * @author Adam Krafczyk
+ * @author El-Sharkawy
  */
 class ReviewDialog extends JDialog implements ActionListener {
+    private static final Logger LOGGER = LogManager.getLogger(ReviewDialog.class);
 
     private static final long serialVersionUID = -2707409724385716679L;
     
     private static final String ACTION_OK = "Ok";
     private static final String ACTION_CANCEL = "Cancel";
     
-    private JComboBox<String> repoBox;
+    private JComboBox<Assignment> assessmentsBox;
     
     private Window parent;
     
@@ -41,24 +44,21 @@ class ReviewDialog extends JDialog implements ActionListener {
      */
     ReviewDialog(Window parent) {
         this.parent = parent;
-        RemoteRepository repository = parent.getRemoteRepository();
-        List<String> repos = null;
+        SubmitterProtocol protocol = parent.getNetworkProtocol();
+        
+        assessmentsBox = new JComboBox<>();
+        assessmentsBox.setRenderer(new AssignmentComboxRenderer());
         try {
-            repos = repository.getRepositories(RemoteRepository.MODE_REPLAY);
-        } catch (ServerNotFoundException | SVNAuthenticationException e) {
+            protocol.getReviewedAssignments().stream()
+                .forEach(a -> assessmentsBox.addItem(a));
+        } catch (NetworkException e) {
+            LOGGER.error("Could not contact student management server after successful login.", e);
             // This shouldn't happen here... (since it worked in LoginDialog)
             parent.showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
-            return;
         }
-        
-        if (repos.size() == 0) {
-            parent.showErrorMessage(I18nProvider.getText("gui.error.no_review_repos"));
+        if (assessmentsBox.getItemCount() == 0) {
+            // close dialog
             return;
-        }
-        
-        repoBox = new JComboBox<String>();
-        for (String s : repos) {
-            repoBox.addItem(s);
         }
         
         JPanel pane = new JPanel();
@@ -68,7 +68,7 @@ class ReviewDialog extends JDialog implements ActionListener {
         pane.setLayout(new GridLayout(2, 2, 2, 2));
         
         pane.add(new JLabel(I18nProvider.getText("gui.elements.exercise")));
-        pane.add(repoBox);
+        pane.add(assessmentsBox);
         
         JButton okButton = new JButton(I18nProvider.getText("gui.elements.ok"));
         okButton.setActionCommand(ACTION_OK);
@@ -94,7 +94,7 @@ class ReviewDialog extends JDialog implements ActionListener {
                     I18nProvider.getText("gui.elements.replay"), JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
-                parent.replayCorrection((String) repoBox.getSelectedItem());
+                parent.replayCorrection((Assignment) assessmentsBox.getSelectedItem());
             }
         }
         setVisible(false);

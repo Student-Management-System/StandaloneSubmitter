@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
+
 /**
  * Stores all information which is needed for uploading a exercise.
  * 
@@ -15,7 +17,7 @@ public class Configuration {
     private String group;
     private String user;
     private String pw;
-    private String exercise;
+    private Assignment exercise;
     private File saveFile;
 
     /**
@@ -33,7 +35,7 @@ public class Configuration {
      *            The file to save this configuration to.
      *            Maybe <tt>null</tt> in this case changes will not be saved.
      */
-    public Configuration(String group, String user, String pw, String exercise, File saveFile) {
+    public Configuration(String group, String user, String pw, Assignment exercise, File saveFile) {
         this.group = group;
         this.user = user;
         this.pw = pw;
@@ -73,7 +75,7 @@ public class Configuration {
      * 
      * @return the exercise
      */
-    public String getExercise() {
+    public Assignment getExercise() {
         return exercise;
     }
     
@@ -111,7 +113,7 @@ public class Configuration {
      * 
      * @param exercise the exercise
      */
-    public void setExercise(String exercise) {
+    public void setExercise(Assignment exercise) {
         this.exercise = exercise;
     }
     

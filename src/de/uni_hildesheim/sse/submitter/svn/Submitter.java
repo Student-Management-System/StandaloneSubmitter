@@ -26,6 +26,8 @@ import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
 import de.uni_hildesheim.sse.submitter.settings.Settings;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * This class is responsible for submitting the whole project.
@@ -42,15 +44,18 @@ public class Submitter {
     private SVNURL url;
     private boolean inFallback;
     private final SVNClientManager clientManager;
+    private SubmitterProtocol protocol;
 
     /**
      * Sole constructor.
      * @param config The local settings for submitting projects (e.g. user name and password).
+     * @param protocol The network protocol for querying the REST server
      * @throws SubmitException If an error occurred before the the server could run the hook script.
      */
-    public Submitter(Configuration config) throws SubmitException {
+    public Submitter(Configuration config, SubmitterProtocol protocol) throws SubmitException {
         this.config = config;
-        url = composeTarget(config, true);
+        this.protocol = protocol;
+        url = composeTarget(config);
         clientManager = SVNClientManager.newInstance(null, config.getUser(), config.getPW());
         DAVRepositoryFactory.setup();
         SVNRepositoryFactoryImpl.setup();
@@ -74,19 +79,21 @@ public class Submitter {
     /**
      * Composes the target URL. 
      * @param config The local settings for submitting projects (e.g. user name and password).
-     * @param group shall the group name or the user name used for the last URL path segment
      * @return the target URL as String
      * @throws SubmitException If an error occurred.
      */
-    private static SVNURL composeTarget(Configuration config, boolean group) throws SubmitException {
-        SVNURL url;
-        String target = Settings.getSettings("server.url", "https://praktikum.sse.uni-hildesheim.de/javaI/abgabe/")
-            + config.getExercise() + "/" + (group ? config.getGroup() : config.getUser());
+    private SVNURL composeTarget(Configuration config) throws SubmitException {
+        SVNURL url = null;
+        String target = null;
         try {
+            target = protocol.getSubmissionUrl(config.getExercise());
             url = SVNURL.parseURIEncoded(target);
+        } catch (NetworkException e1) {
+            throw new SubmitException(ErrorType.COULD_NOT_QUERY_MANAGEMENT_SYSTEM, config.getExercise().getName());
         } catch (SVNException e) {
             throw new SubmitException(ErrorType.NO_REPOSITORY_FOUND, target);
         }
+        
         return url;
     }
 
@@ -175,24 +182,24 @@ public class Submitter {
         try {
             updateClient.doCheckout(url, tempFolder, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, true);
         } catch (SVNException e) {
-            boolean doThrow = true;
-            if (!inFallback) {
-                // if we are not in fallback mode, then try for single-user submission instead of group submission.
-                // use that URL if successful
-                inFallback = true;
-                SVNURL tmpURL = composeTarget(config, false);
-                try {
-                    updateClient.doCheckout(tmpURL, tempFolder, SVNRevision.HEAD, SVNRevision.HEAD, 
-                        SVNDepth.INFINITY, true);
-                    url = tmpURL;
-                    doThrow = false;
-                } catch (SVNException e1) {
-                    // ignore and throw
-                }
-            }
-            if (doThrow) {
-                throw new SubmitException(ErrorType.NO_EXERCISE_FOUND, url.toString());
-            }
+//            boolean doThrow = true;
+//            if (!inFallback) {
+//                // if we are not in fallback mode, then try for single-user submission instead of group submission.
+//                // use that URL if successful
+//                inFallback = true;
+//                SVNURL tmpURL = composeTarget(config, false);
+//                try {
+//                    updateClient.doCheckout(tmpURL, tempFolder, SVNRevision.HEAD, SVNRevision.HEAD, 
+//                        SVNDepth.INFINITY, true);
+//                    url = tmpURL;
+//                    doThrow = false;
+//                } catch (SVNException e1) {
+//                    // ignore and throw
+//                }
+//            }
+//            if (doThrow) {
+            throw new SubmitException(ErrorType.NO_EXERCISE_FOUND, url.toString());
+//            }
         }
     }
 
@@ -205,7 +212,7 @@ public class Submitter {
     private int prepareCommit(File sourceFolder) throws SubmitException {
         FolderInitilizer initilizer = new FolderInitilizer(sourceFolder, tempFolder);
         try {
-            initilizer.init(config.getExercise());
+            initilizer.init(config.getExercise().getName());
             return FileUtils.listFiles(sourceFolder, new String[] {"java"}, true).size();
         } catch (IOException e) {
             throw new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, System.getProperty("java.io.tmpdir"));

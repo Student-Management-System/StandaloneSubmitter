@@ -19,7 +19,7 @@ public class ConfigReader {
     static final String GROUP = "Gruppe";
     static final String USER = "Benutzername";
     static final String PW = "Passwort";
-    static final String EXERCISE = "Aufgabe";
+//    static final String EXERCISE = "Aufgabe";
     
     private static final String CONFIG_FILE_NAME = "submission.conf";
 
@@ -34,7 +34,7 @@ public class ConfigReader {
         if (configFile != null) {
             result = read(configFile);
         } else {
-            result = new Configuration("", "", "", "", null);
+            result = new Configuration("", "", "", null, null);
         }
         return result;
     }
@@ -69,11 +69,11 @@ public class ConfigReader {
                 String group = readProperties(prop, GROUP);
                 String user = readProperties(prop, USER);
                 String pw = readProperties(prop, PW);
-                String exercise = readProperties(prop, EXERCISE);
+//                String exercise = readProperties(prop, EXERCISE);
     
-                config = new Configuration(group, user, pw, exercise, configDestination);
+                config = new Configuration(group, user, pw, null, configDestination);
             } else {
-                config = new Configuration("", "", "", "", null);
+                config = new Configuration("", "", "", null, null);
             }
         } catch (IOException ex) {
             ex.printStackTrace();

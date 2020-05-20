@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -32,6 +31,7 @@ import de.uni_hildesheim.sse.submitter.svn.Revision;
 import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
@@ -51,7 +51,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      */
     private JTextField sourceDirectoryField;
     private LogArea logArea;
-    private JComboBox<String> reposBox;
+    private JComboBox<Assignment> assignmentBox;
     private JButton submitBtn;
     private JButton historyBtn;
     private JButton replayBtn;
@@ -76,7 +76,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(600, 500);
         protocol = new SubmitterProtocol(ToolSettings.getConfig().getAuthURL(), ToolSettings.getConfig().getMgmtURL(),
-            ToolSettings.getConfig().getCourse().getCourse());
+            ToolSettings.getConfig().getCourse().getCourse(), ToolSettings.getConfig().getRepositoryURL());
         String semester = ToolSettings.getConfig().getCourse().getSemester();
         if (null != semester) {
             protocol.setSemester(semester);
@@ -93,11 +93,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         LoginDialog dialog = new LoginDialog(this);
         repository = dialog.getRepository();
         try {
-            List<String> assignments = new ArrayList<>();
-            protocol.getOpenAssignments().stream()
-                .map(a -> a.getName())
-                .forEach(s -> assignments.add(s));
-            setRepositoryList(assignments);
+            setAssignmentMenu(protocol.getOpenAssignments());
         } catch (NetworkException e) {
             // This shouldn't happen here... (since it worked in LoginDialog)
             showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
@@ -134,16 +130,16 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     }
     
     /**
-     * Sets the repositories that the user can choose.
+     * Sets the assignments that the user can choose.
      * 
-     * @param repos list with all repositories names
+     * @param assignments List of defined assignments (homework, exams, exercises, ...)
      */
-    private void setRepositoryList(List<String> repos) {
-        reposBox.removeAllItems();
-        for (String repo : repos) {
-            reposBox.addItem(repo);
-        }
-        config.setExercise((String) reposBox.getSelectedItem());
+    private void setAssignmentMenu(List<Assignment> assignments) {
+//        ((AssignmentComboboxModel) assignmentBox.getModel()).setAssignments(assignments);
+        assignmentBox.removeAllItems();
+        assignments.stream()
+            .forEach(a -> assignmentBox.addItem(a));
+        config.setExercise((Assignment) assignmentBox.getSelectedItem());
     }
     
     /**
@@ -154,12 +150,13 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         
         sourceDirectoryField = new JTextField();
         logArea = new LogArea();
-        reposBox = new JComboBox<String>();
+        assignmentBox = new JComboBox<>();
+        assignmentBox.setRenderer(new AssignmentComboxRenderer());
         
-        reposBox.addActionListener(new ActionListener() {
+        assignmentBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent evt) {
-                config.setExercise((String) reposBox.getSelectedItem());
+                config.setExercise((Assignment) assignmentBox.getSelectedItem());
             }
         });
         
@@ -178,7 +175,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         JPanel repoChooserPanel = new JPanel();
         repoChooserPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         repoChooserPanel.add(new JLabel(I18nProvider.getText("gui.elements.exercise")));
-        repoChooserPanel.add(reposBox);
+        repoChooserPanel.add(assignmentBox);
         
         // Create source-folder choose area
         JPanel topTopPanel = new JPanel(new BorderLayout(5, 5));
@@ -310,13 +307,13 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     
     /**
      * Replays a corrected exercise.
-     * @param repoName The name of the exercise.
+     * @param assignment The corrected assignment (exercise / exam) to replay.
      */
-    void replayCorrection(String repoName) {
+    void replayCorrection(Assignment assignment) {
         toggleButtons(false);
         clearLog();
         
-        config.setExercise(repoName);
+        config.setExercise(assignment);
         
         showInfoMessage(I18nProvider.getText("gui.log.replaying"));
         try {
@@ -327,7 +324,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
         }
         
-        config.setExercise((String) reposBox.getSelectedItem());
+        config.setExercise((Assignment) assignmentBox.getSelectedItem());
         
         toggleButtons(true);
     }
