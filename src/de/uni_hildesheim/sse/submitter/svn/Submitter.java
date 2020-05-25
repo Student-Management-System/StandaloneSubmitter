@@ -25,7 +25,6 @@ import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
 import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
-import de.uni_hildesheim.sse.submitter.settings.Settings;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
@@ -35,14 +34,13 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  * @author El-Sharkawy
  * 
  */
-public class Submitter {
+public class Submitter implements AutoCloseable {
 
     private Configuration config;
     private File tempFolder;
     private SVNCommitClient client;
     private SVNUpdateClient updateClient;
     private SVNURL url;
-    private boolean inFallback;
     private final SVNClientManager clientManager;
     private SubmitterProtocol protocol;
 
@@ -220,8 +218,7 @@ public class Submitter {
     }
 
     @Override
-    protected void finalize() throws Throwable {
+    public void close() throws IOException {
         FileUtils.deleteDirectory(tempFolder);
-        super.finalize();
     }
 }

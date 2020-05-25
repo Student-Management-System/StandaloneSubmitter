@@ -1,6 +1,9 @@
 package de.uni_hildesheim.sse.submitter.ui;
 
 import java.io.File;
+import java.io.IOException;
+
+import org.apache.logging.log4j.LogManager;
 
 import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
@@ -38,14 +41,15 @@ class SubmissionThread extends Thread {
     
     @Override
     public void run() {
-        try {
-            Submitter submitter = new Submitter(config, parent.getNetworkProtocol());
+        try (Submitter submitter = new Submitter(config, parent.getNetworkProtocol())) {
             SubmitResult result = submitter.submitFolder(projectFolder);
             translator.handleCommitResult(result.getCommitInfo());
             if (result.getNumJavFiles() <= 0) {
                 ISubmissionOutputHandler handler = translator.getHandler();
                 handler.showErrorMessage("No java files submitted.");
             }
+        } catch (IOException e) {
+            LogManager.getLogger(SubmissionThread.class).warn("Could not clean up temp folder.", e);
         } catch (SubmitException e) {
             translator.handleCommitException(e);
         } finally {

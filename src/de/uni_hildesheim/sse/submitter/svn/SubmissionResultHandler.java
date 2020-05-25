@@ -69,7 +69,7 @@ public class SubmissionResultHandler {
                 errorMsg = "Es konnte für die Gruppe "
                         + config.getGroup()
                         + " keine Hausaufgabe mit dem Namen "
-                        + config.getExercise()
+                        + config.getExercise().getName()
                         + " gefunden werden.\n"
                         + "Bitte vergewissern Sie sich, dass\n"
                         + "  1.) Das der Gruppenname korrekt ist "
@@ -78,7 +78,7 @@ public class SubmissionResultHandler {
                         + "\n"
                         + "  2.) Der Name der Hausaufgabe korrekt ist "
                         + "(es wird zwischen Groß-/Kleinschreibung unterschieden): "
-                        + config.getExercise() + "\n"
+                        + config.getExercise().getName() + "\n"
                         + "  3.) Ihre Logindaten korrekt sind (es wird der Login vom Rechenzentrum erwartet).\n"
                         + "Versuchen Sie " + commitExc.getLocation() + " im Browser aufzurufen.";
                 break;
