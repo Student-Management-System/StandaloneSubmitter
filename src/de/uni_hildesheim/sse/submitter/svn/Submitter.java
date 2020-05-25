@@ -23,8 +23,8 @@ import org.tmatesoft.svn.core.wc.SVNCommitClient;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
-import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
+import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
@@ -36,7 +36,7 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  */
 public class Submitter implements AutoCloseable {
 
-    private Configuration config;
+    private SubmissionConfiguration config;
     private File tempFolder;
     private SVNCommitClient client;
     private SVNUpdateClient updateClient;
@@ -50,7 +50,7 @@ public class Submitter implements AutoCloseable {
      * @param protocol The network protocol for querying the REST server
      * @throws SubmitException If an error occurred before the the server could run the hook script.
      */
-    public Submitter(Configuration config, SubmitterProtocol protocol) throws SubmitException {
+    public Submitter(SubmissionConfiguration config, SubmitterProtocol protocol) throws SubmitException {
         this.config = config;
         this.protocol = protocol;
         url = composeTarget(config);
@@ -80,7 +80,7 @@ public class Submitter implements AutoCloseable {
      * @return the target URL as String
      * @throws SubmitException If an error occurred.
      */
-    private SVNURL composeTarget(Configuration config) throws SubmitException {
+    private SVNURL composeTarget(SubmissionConfiguration config) throws SubmitException {
         SVNURL url = null;
         String target = null;
         try {
@@ -180,24 +180,7 @@ public class Submitter implements AutoCloseable {
         try {
             updateClient.doCheckout(url, tempFolder, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, true);
         } catch (SVNException e) {
-//            boolean doThrow = true;
-//            if (!inFallback) {
-//                // if we are not in fallback mode, then try for single-user submission instead of group submission.
-//                // use that URL if successful
-//                inFallback = true;
-//                SVNURL tmpURL = composeTarget(config, false);
-//                try {
-//                    updateClient.doCheckout(tmpURL, tempFolder, SVNRevision.HEAD, SVNRevision.HEAD, 
-//                        SVNDepth.INFINITY, true);
-//                    url = tmpURL;
-//                    doThrow = false;
-//                } catch (SVNException e1) {
-//                    // ignore and throw
-//                }
-//            }
-//            if (doThrow) {
             throw new SubmitException(ErrorType.NO_EXERCISE_FOUND, url.toString());
-//            }
         }
     }
 

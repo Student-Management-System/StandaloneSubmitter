@@ -5,6 +5,7 @@ import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -44,8 +45,9 @@ class ReplayDialog extends JDialog implements ActionListener {
      * Creates a {@link ReplayDialog} with the given parent.
      * @param parent the parent window
      * @throws SVNException if unable to get repositories
+     * @throws IOException if writing the files fails.
      */
-    ReplayDialog(Window parent) throws SVNException {
+    ReplayDialog(Window parent) throws SVNException, IOException {
         this.parent = parent;
         
         JButton okButton = new JButton("Ok");

@@ -19,8 +19,8 @@ import javax.swing.JTextField;
 
 import org.tmatesoft.svn.core.SVNAuthenticationException;
 
-import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
+import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.ServerNotFoundException;
 import net.ssehub.exercisesubmitter.protocol.backend.UnknownCredentialsException;
@@ -39,7 +39,7 @@ class LoginDialog extends JDialog implements ActionListener {
      */
     private static final long serialVersionUID = 365531812487797101L;
     
-    private Configuration config;
+    private SubmissionConfiguration config;
     
     private RemoteRepository repository;
     private SubmitterProtocol protocol;
@@ -135,7 +135,7 @@ class LoginDialog extends JDialog implements ActionListener {
             boolean success = protocol.login(user, pw);
             if (success) {
                 try {
-                    repository = new RemoteRepository(config);
+                    repository = new RemoteRepository(config, protocol);
                     // get repository list here to test if login information are correct
                     repository.getRepositories(RemoteRepository.MODE_SUBMISSION);
                 } catch (ServerNotFoundException e) {

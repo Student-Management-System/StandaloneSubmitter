@@ -1,6 +1,6 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
-import de.uni_hildesheim.sse.submitter.conf.Configuration;
+import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
 
 /**
@@ -14,7 +14,7 @@ public interface ISubmissionOutputHandler {
      * Getter for the submission settings.
      * @return The submission settings, must not be <tt>null</tt>.
      */
-    public Configuration getConfiguration();
+    public SubmissionConfiguration getConfiguration();
 
     /**
      * Shows an info message (e.g. no files has been changed, or submission was successful).

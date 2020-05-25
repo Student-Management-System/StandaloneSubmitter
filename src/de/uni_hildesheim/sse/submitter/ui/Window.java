@@ -17,12 +17,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.Starter;
-import de.uni_hildesheim.sse.submitter.conf.ConfigReader;
-import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
+import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
+import de.uni_hildesheim.sse.submitter.settings.ToolConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.settings.UiColorSettings;
 import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
@@ -40,6 +42,8 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  *
  */
 public class Window extends JFrame implements ISubmissionOutputHandler {
+    
+    private static final Logger LOGGER = LogManager.getLogger(Window.class);
 
     /**
      * serialVersionUID.
@@ -58,7 +62,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     private JButton reviewBtn;
     
     private SubmissionResultHandler translator;
-    private Configuration config;
+    private SubmissionConfiguration config;
     private RemoteRepository repository;
     private SubmitterProtocol protocol;
 
@@ -75,9 +79,10 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         setTitle(title);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(600, 500);
-        protocol = new SubmitterProtocol(ToolSettings.getConfig().getAuthURL(), ToolSettings.getConfig().getMgmtURL(),
-            ToolSettings.getConfig().getCourse().getCourse(), ToolSettings.getConfig().getRepositoryURL());
-        String semester = ToolSettings.getConfig().getCourse().getSemester();
+        ToolConfiguration tConf = ToolSettings.getConfig();
+        protocol = new SubmitterProtocol(tConf.getAuthURL(), tConf.getMgmtURL(), tConf.getCourse().getCourse(),
+            tConf.getRepositoryURL());
+        String semester = tConf.getCourse().getSemester();
         if (null != semester) {
             protocol.setSemester(semester);
         }
@@ -88,7 +93,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         setVisible(true);
         setLocationRelativeTo(null);
         
-        config = ConfigReader.read();
+        config = SubmissionConfiguration.load();
         translator = new SubmissionResultHandler(this);
         LoginDialog dialog = new LoginDialog(this);
         repository = dialog.getRepository();
@@ -97,6 +102,9 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         } catch (NetworkException e) {
             // This shouldn't happen here... (since it worked in LoginDialog)
             showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
+        }
+        if (config.getProjectFolder() != null) {
+            setSelectedPath(config.getProjectFolder().getPath());
         }
         
         if (Starter.DEBUG) {
@@ -135,7 +143,6 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * @param assignments List of defined assignments (homework, exams, exercises, ...)
      */
     private void setAssignmentMenu(List<Assignment> assignments) {
-//        ((AssignmentComboboxModel) assignmentBox.getModel()).setAssignments(assignments);
         assignmentBox.removeAllItems();
         assignments.stream()
             .forEach(a -> assignmentBox.addItem(a));
@@ -268,7 +275,6 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * Clears the log.
      */
     void clearLog() {
-        // logArea.setText("");
         logArea.clear();
     }
     
@@ -319,8 +325,22 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         try {
             getRemoteRepository().replay(getSelectedPath());
             showInfoMessage(I18nProvider.getText("gui.log.replaying_successful"));
-        } catch (SVNException | IOException e) {
-            e.printStackTrace();
+        } catch (SVNException e) {
+            if (e.getMessage().contains("404 Not Found")) {
+                try {
+                    String[] path = protocol.getPathToSubmission(assignment);
+                    showErrorMessage(I18nProvider.getText("gui.error.replay.no_submission_error", path[0], path[1],
+                        ToolSettings.getConfig().getCourse().getTeamMail()));
+                } catch (NetworkException e1) {
+                    LOGGER.error("Could not replay submission from server", e);
+                    showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
+                }
+            } else {
+                LOGGER.error("Could not replay submission from server", e);
+                showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
+            }
+        } catch (IOException e) {
+            LOGGER.error("Could not replay submission from server", e);
             showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
         }
         
@@ -344,7 +364,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     }
 
     @Override
-    public Configuration getConfiguration() {
+    public SubmissionConfiguration getConfiguration() {
         return config;
     }
 

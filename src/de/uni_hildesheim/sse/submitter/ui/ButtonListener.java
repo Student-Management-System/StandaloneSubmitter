@@ -2,11 +2,11 @@ package de.uni_hildesheim.sse.submitter.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import org.tmatesoft.svn.core.SVNException;
 
@@ -47,7 +47,9 @@ class ButtonListener implements ActionListener {
             int result = fileChooser.showOpenDialog(parent);
             switch (result) {
             case JFileChooser.APPROVE_OPTION:
-                parent.setSelectedPath(fileChooser.getSelectedFile().getAbsolutePath());
+                File projectFolder = fileChooser.getSelectedFile().getAbsoluteFile();
+                parent.getConfiguration().setProjectFolder(projectFolder);
+                parent.setSelectedPath(projectFolder.getPath());
                 break;
             case JFileChooser.CANCEL_OPTION:
                 break;
@@ -76,7 +78,7 @@ class ButtonListener implements ActionListener {
             if (result == JOptionPane.OK_OPTION) {
                 try {
                     new ReplayDialog(parent);
-                } catch (SVNException e) {
+                } catch (SVNException | IOException e) {
                     // Shouldn't happen
                     parent.showErrorMessage(I18nProvider.getText("gui.error.login_wrong"));
                 } finally {
@@ -88,9 +90,9 @@ class ButtonListener implements ActionListener {
         } else if (command.equals(ACTION_HISTORY)) {
             parent.clearLog();
             parent.toggleButtons(false);
-            try {
+            try {   
                 parent.showHistory(parent.getRemoteRepository().getHistory());
-            } catch (SVNException e) {
+            } catch (SVNException | IOException e) {
                 // Shouldn't happen
                 parent.showErrorMessage(I18nProvider.getText("gui.error.login_wrong"));
             }

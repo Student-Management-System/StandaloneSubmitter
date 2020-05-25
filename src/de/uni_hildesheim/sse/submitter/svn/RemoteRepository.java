@@ -23,33 +23,39 @@ import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 
-import de.uni_hildesheim.sse.submitter.conf.Configuration;
 import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
+import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * Contains methods to fetch information from the remote repository.
  * 
  * @author Adam Krafczyk
+ * @author El-Sharkawy
  */
 public class RemoteRepository {
 
     public static final String MODE_SUBMISSION = "SUBMISSION";
     public static final String MODE_REPLAY = "REPLAY";
     
-    private Configuration config;
+    private SubmissionConfiguration config;
     private String target;
     private SVNRepository repository;
+    private SubmitterProtocol protocol;
     
     /**
      * Creates a repository object for the server given in configuration.
      * 
      * @param config contains information about server, user, password, etc.
+     * @param protocol The network protocol for querying the REST server
      * 
      * @throws ServerNotFoundException when unable to connect to server
      */
-    public RemoteRepository(Configuration config) throws ServerNotFoundException {
+    public RemoteRepository(SubmissionConfiguration config, SubmitterProtocol protocol) throws ServerNotFoundException {
         this.config = config;
+        this.protocol = protocol;
         
         target = ToolSettings.getConfig().getRepositoryURL();
         try {
@@ -59,7 +65,7 @@ public class RemoteRepository {
             throw new ServerNotFoundException(target);
         }
         repository.setAuthenticationManager(
-            new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW())
+            new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW().toCharArray(), null, null)
         );
     }
     
@@ -121,13 +127,18 @@ public class RemoteRepository {
      * Returns the history of the repository.
      * @return a list of Strings, where each String represents a single version
      * @throws SVNException if fetching the history information fails
+     * @throws IOException if writing the files fails.
      */
-    public List<Revision> getHistory() throws SVNException {
+    public List<Revision> getHistory() throws SVNException, IOException {
         List<Revision> result = new ArrayList<Revision>();
         
-        String[] targetPaths = {
-                config.getExercise() + "/" + config.getGroup()
-        };
+        String[] targetPaths = null;
+        try {
+            String[] remotePath = protocol.getPathToSubmission(config.getExercise());
+            targetPaths = new String[]{remotePath[0] + "/" + remotePath[1]};
+        } catch (NetworkException e) {
+            throw new IOException(e);
+        }
         Collection<?> revisions = repository.log(targetPaths, null, 0,
                     repository.getLatestRevision(), false, false);
         
@@ -161,7 +172,8 @@ public class RemoteRepository {
         try {
             repository.checkout(revision, null, true, new ExportEditor(tmpDir));
             tmpDir = new File(tmpDir, config.getExercise().getName());
-            tmpDir = new File(tmpDir, config.getGroup());
+            String subFolderName = tmpDir.listFiles()[0].getName();
+            tmpDir = new File(tmpDir, subFolderName);
             if (!tmpDir.isDirectory()) {
                 throw new IOException("Temp-directory has wrong structure"); // TODO
             }
@@ -172,7 +184,7 @@ public class RemoteRepository {
     }
     
     /**
-     * Get the current revision of the exercise selected in the {@link Configuration}
+     * Get the current revision of the exercise selected in the {@link SubmissionConfiguration}
      * and save it in the given directory.
      * @param path The path to the directory. Contents will be deleted.
      * @throws SVNException if unable to get the current revision.
@@ -181,9 +193,13 @@ public class RemoteRepository {
     public void replay(String path) throws SVNException, IOException {
         long latestRevision = 0;
         
-        String[] targetPaths = {
-                config.getExercise() + "/" + config.getGroup()
-        };
+        String[] targetPaths = null;
+        try {
+            String[] remotePath = protocol.getPathToSubmission(config.getExercise());
+            targetPaths = new String[]{remotePath[0] + "/" + remotePath[1]};
+        } catch (NetworkException e) {
+            throw new IOException(e);
+        }
         Collection<?> revisions = repository.log(targetPaths, null, 0,
                     repository.getLatestRevision(), false, false);
         
@@ -195,12 +211,6 @@ public class RemoteRepository {
         }
         
         replay(path, latestRevision);
-    }
-    
-    @Override
-    public void finalize() throws Throwable {
-        repository.closeSession();
-        super.finalize();
     }
     
     /**
@@ -251,4 +261,9 @@ public class RemoteRepository {
         }
     }
     
+    @Override
+    public void finalize() throws Throwable {
+        repository.closeSession();
+        super.finalize();
+    }
 }

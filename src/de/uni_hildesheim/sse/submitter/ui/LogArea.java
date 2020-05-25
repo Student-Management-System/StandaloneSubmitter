@@ -13,12 +13,18 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
+
 /**
  * Text Area for logging messages.
  * @author Jonathan Lechner
  *
  */
 public class LogArea extends JPanel {
+    private static final Logger LOGGER = LogManager.getLogger(LogArea.class);
 
     private static final long serialVersionUID = -7516986866802637007L;
     
@@ -59,14 +65,14 @@ public class LogArea extends JPanel {
         try {
             document.insertString(document.getLength(), message, style);
         } catch (BadLocationException exc) {
-            //TODO Errorreport
+            LOGGER.error("Could not append log message at the end of the text", exc);
         }
     }
     
     /**
      * Appends default layouted text to textPane.
      * @param message text that should get appended.
-     * @param color color that should get applyed.
+     * @param color color that should get applied.
      * @param bold true if text should displayed bold.
      */
     public void append(String message, String color, boolean bold) {
@@ -76,7 +82,7 @@ public class LogArea extends JPanel {
         try {
             document.insertString(document.getLength(), message, style);
         } catch (BadLocationException exc) {
-            //TODO Errorreport
+            LOGGER.error("Could not append log message at the end of the text", exc);
         }
     }
     
@@ -89,12 +95,12 @@ public class LogArea extends JPanel {
     
     /**
      * Returns Style for message type.
-     * @param color color that should get applyed.
+     * @param color color that should get applied.
      * @param bold true if text should displayed bold.
      */
     private void getStyle(String color, boolean bold) {
         if (color.equals("")) {
-            color = "#000000";
+            color = ToolSettings.getConfig().getColorSettings().getDefaultColor();
         }
         StyleConstants.setForeground(style, Color.decode(color));
         StyleConstants.setBold(style, bold);

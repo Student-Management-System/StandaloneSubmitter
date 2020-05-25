@@ -4,7 +4,7 @@ import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 
-import de.uni_hildesheim.sse.submitter.conf.Configuration;
+import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
 
@@ -45,7 +45,7 @@ public class SubmissionResultHandler {
      *            The Exception which was caught.
      */
     public void handleCommitException(SubmitException commitExc) {
-        Configuration config = handler.getConfiguration();
+        SubmissionConfiguration config = handler.getConfiguration();
         String errorMsg = null;
         if (null != commitExc.getErrorCode()) {
             switch (commitExc.getErrorCode()) {
@@ -67,14 +67,14 @@ public class SubmissionResultHandler {
                 break;
             case NO_EXERCISE_FOUND:
                 errorMsg = "Es konnte für die Gruppe "
-                        + config.getGroup()
+                       + "\"Gruppe\""
                         + " keine Hausaufgabe mit dem Namen "
                         + config.getExercise().getName()
                         + " gefunden werden.\n"
                         + "Bitte vergewissern Sie sich, dass\n"
                         + "  1.) Das der Gruppenname korrekt ist "
                         + "(es wird zwischen Groß-/Kleinschreibung unterschieden): "
-                        + config.getGroup()
+                       + "\"Gruppe\""
                         + "\n"
                         + "  2.) Der Name der Hausaufgabe korrekt ist "
                         + "(es wird zwischen Groß-/Kleinschreibung unterschieden): "

@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 
-import de.uni_hildesheim.sse.submitter.conf.Configuration;
+import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
 import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
 import de.uni_hildesheim.sse.submitter.svn.SubmitException;
@@ -20,7 +20,7 @@ import de.uni_hildesheim.sse.submitter.svn.Submitter;
 class SubmissionThread extends Thread {
 
     private Window parent;
-    private Configuration config;
+    private SubmissionConfiguration config;
     private SubmissionResultHandler translator;
     private File projectFolder;
     
@@ -32,7 +32,9 @@ class SubmissionThread extends Thread {
      * @param translator the translator for results.
      * @param projectFolder the folder of the project to be submitted.
      */
-    SubmissionThread(Window parent, Configuration config, SubmissionResultHandler translator, File projectFolder) {
+    SubmissionThread(Window parent, SubmissionConfiguration config, SubmissionResultHandler translator,
+        File projectFolder) {
+        
         this.parent = parent;
         this.config = config;
         this.translator = translator;

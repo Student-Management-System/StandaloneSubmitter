@@ -39,8 +39,7 @@ public class I18nProvider extends AbstractPropertiesReader {
     /**
      * Returns a user text for the given key.
      * 
-     * @param key
-     *            The name of the user text inside the properties file.
+     * @param key The name of the user text inside the properties file.
      * @return The user text or an empty string if the key wasn't found.
      */
     public static String getText(String key) {
@@ -50,5 +49,24 @@ public class I18nProvider extends AbstractPropertiesReader {
         }
 
         return result;
+    }
+    
+    /**
+     * Returns a user text for the given key and uses {@link String#format(String, Object...)} to insert parameters.
+     * @param key The name of the user text inside the properties file.
+     * @param args Arguments referenced by the format specifiers in the format
+     *         string.  If there are more arguments than format specifiers, the
+     *         extra arguments are ignored.  The number of arguments is
+     *         variable and may be zero or <tt>null</tt>.
+     * @return The user text or an empty string if the key wasn't found.
+     */
+    public static String getText(String key, Object... args) {
+        String text = getText(key);
+        
+        if (null != args && args.length > 0 && null != text && !text.isBlank()) {
+            text = String.format(text, args);
+        }
+        
+        return text;
     }
 }
