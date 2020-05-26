@@ -2,6 +2,7 @@ package de.uni_hildesheim.sse.submitter.svn;
 
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * Caller of the {@link Submitter}.
@@ -34,5 +35,11 @@ public interface ISubmissionOutputHandler {
      * @param descriptions Errors detected by the SVN HOOK script.
      */
     public void showInfoMessage(String message, ErrorDescription[] descriptions);
+    
+    /**
+     * Returns the network protocol to communicate with the <b>student management system</b> via it's REST interface.
+     * @return The network protocol for the REST server.
+     */
+    public SubmitterProtocol getNetworkProtocol();
 
 }

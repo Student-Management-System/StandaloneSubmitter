@@ -1,12 +1,17 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 
+import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 
 /**
  * Utility class to translate results and exceptions into messages, which are understandable for students / course
@@ -16,6 +21,7 @@ import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
  * 
  */
 public class SubmissionResultHandler {
+    private static final Logger LOGGER = LogManager.getLogger(SubmissionResultHandler.class);
 
     private ISubmissionOutputHandler handler;
 
@@ -66,21 +72,19 @@ public class SubmissionResultHandler {
                 }
                 break;
             case NO_EXERCISE_FOUND:
-                errorMsg = "Es konnte für die Gruppe "
-                       + "\"Gruppe\""
-                        + " keine Hausaufgabe mit dem Namen "
-                        + config.getExercise().getName()
-                        + " gefunden werden.\n"
-                        + "Bitte vergewissern Sie sich, dass\n"
-                        + "  1.) Das der Gruppenname korrekt ist "
-                        + "(es wird zwischen Groß-/Kleinschreibung unterschieden): "
-                       + "\"Gruppe\""
-                        + "\n"
-                        + "  2.) Der Name der Hausaufgabe korrekt ist "
-                        + "(es wird zwischen Groß-/Kleinschreibung unterschieden): "
-                        + config.getExercise().getName() + "\n"
-                        + "  3.) Ihre Logindaten korrekt sind (es wird der Login vom Rechenzentrum erwartet).\n"
-                        + "Versuchen Sie " + commitExc.getLocation() + " im Browser aufzurufen.";
+                Assignment exercise = config.getExercise();
+                String userType = exercise.isGroupWork() ? I18nProvider.getText("submission.group")
+                    : I18nProvider.getText("submission.user");
+                String location;
+                try {
+                    location = handler.getNetworkProtocol().getPathToSubmission(exercise)[1];
+                } catch (NetworkException e) {
+                    location = I18nProvider.getText("errors.stdmanagemt.unreachable");
+                    LOGGER.warn("Could not query REST server", e);
+                }
+                // 4 Parameters: Exercise name, user/group, user/group name, upload location 
+                errorMsg = I18nProvider.getText("submission.error.exercise_not_found", exercise.getName(), userType,
+                    location, commitExc.getLocation());
                 break;
             case CANNOT_COMMIT:
                 errorMsg = "Es konnten keine Hausaufgaben nach " + commitExc.getLocation() + " hochgeladen werden.\n"

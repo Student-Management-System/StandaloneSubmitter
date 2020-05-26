@@ -42,25 +42,7 @@ class ButtonListener implements ActionListener {
     public void actionPerformed(ActionEvent evt) {
         String command = evt.getActionCommand();
         if (command.equals(ACTION_BROWSE_FOLDER)) {
-            JFileChooser fileChooser = new JFileChooser(parent.getSelectedPath());
-            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int result = fileChooser.showOpenDialog(parent);
-            switch (result) {
-            case JFileChooser.APPROVE_OPTION:
-                File projectFolder = fileChooser.getSelectedFile().getAbsoluteFile();
-                parent.getConfiguration().setProjectFolder(projectFolder);
-                parent.setSelectedPath(projectFolder.getPath());
-                break;
-            case JFileChooser.CANCEL_OPTION:
-                break;
-            case JFileChooser.ERROR_OPTION:
-                break;
-            default:
-                if (Starter.DEBUG) {
-                    System.err.println("Unexpected result from JFileChooser: " + result);
-                }
-                break;
-            }
+            createFolderChooser();
         } else if (command.equals(ACTION_SUBMIT)) {
             parent.toggleButtons(false);
             parent.submit();
@@ -108,6 +90,31 @@ class ButtonListener implements ActionListener {
             if (Starter.DEBUG) {
                 System.err.println("Unknown action command: " + command);
             }
+        }
+    }
+
+    /**
+     * Creates and handles a FileChooser to select a local folder for submission / replaying.
+     */
+    private void createFolderChooser() {
+        JFileChooser fileChooser = new JFileChooser(parent.getSelectedPath());
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int result = fileChooser.showOpenDialog(parent);
+        switch (result) {
+        case JFileChooser.APPROVE_OPTION:
+            File projectFolder = fileChooser.getSelectedFile().getAbsoluteFile();
+            parent.getConfiguration().setProjectFolder(projectFolder);
+            parent.setSelectedPath(projectFolder.getPath());
+            break;
+        case JFileChooser.CANCEL_OPTION:
+            break;
+        case JFileChooser.ERROR_OPTION:
+            break;
+        default:
+            if (Starter.DEBUG) {
+                System.err.println("Unexpected result from JFileChooser: " + result);
+            }
+            break;
         }
     }
 

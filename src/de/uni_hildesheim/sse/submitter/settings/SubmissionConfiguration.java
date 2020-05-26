@@ -5,10 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import com.google.gson.Gson;
-
-import io.gsonfire.GsonFireBuilder;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
+import net.ssehub.exercisesubmitter.protocol.utils.JsonUtils;
 import net.ssehub.studentmgmt.backend_api.JSON;
 
 /**
@@ -20,7 +18,7 @@ import net.ssehub.studentmgmt.backend_api.JSON;
 public class SubmissionConfiguration {
     public static final String CONFIG_FILE_NAME = "submission.conf";
 
-    private static JSON jsonParser;
+    private static JSON jsonParser = JsonUtils.createParser();
     
     private String user;
     /*
@@ -28,7 +26,7 @@ public class SubmissionConfiguration {
      */
     private transient String pw;
     private Assignment exercise;
-    private File projectFolder;
+    private String projectFolder;
 
     /**
      * Sole constructor for this class.
@@ -40,7 +38,7 @@ public class SubmissionConfiguration {
      * @param exercise
      *            The exercise to upload.
      */
-    public SubmissionConfiguration( String user, String pw, Assignment exercise) {
+    public SubmissionConfiguration(String user, String pw, Assignment exercise) {
         this.user = user;
         this.pw = pw;
         this.exercise = exercise;
@@ -106,7 +104,7 @@ public class SubmissionConfiguration {
      * @return the local project folder
      */
     public File getProjectFolder() {
-        return projectFolder;
+        return null != projectFolder ? new File(projectFolder) : null;
     }
 
     /**
@@ -114,7 +112,7 @@ public class SubmissionConfiguration {
      * @param projectFolder the local project folder
      */
     public void setProjectFolder(File projectFolder) {
-        this.projectFolder = projectFolder;
+        this.projectFolder = projectFolder.getPath();
         save();
     }
     
@@ -123,28 +121,11 @@ public class SubmissionConfiguration {
      */
     private void save() {
         try (FileWriter writer = new FileWriter(CONFIG_FILE_NAME)) {
-            String serialized = getParser().serialize(this);
+            String serialized = jsonParser.serialize(this);
             writer.write(serialized);
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-    
-    /**
-     * Returns a JSON parser that may be used to save/load the locally saved configuration.
-     * @return The parser to use.
-     */
-    private static JSON getParser() {
-        // Multiple instances not critical -> No synchronized
-        if (null == jsonParser) {
-            jsonParser = new JSON();
-            Gson gson = new GsonFireBuilder().createGsonBuilder()
-                .setPrettyPrinting()
-                .create();
-            jsonParser.setGson(gson);
-        }
-        
-        return jsonParser;
     }
     
     /**
@@ -157,7 +138,7 @@ public class SubmissionConfiguration {
         if (file.exists()) {
             try {
                 String content = Files.readString(file.toPath());
-                result = getParser().deserialize(content, SubmissionConfiguration.class);
+                result = jsonParser.deserialize(content, SubmissionConfiguration.class);
             } catch (IOException e) {
                 // TODO SE: Log
             }

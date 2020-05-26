@@ -118,6 +118,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * Returns the network protocol to communicate with the <b>student management system</b> via it's REST interface.
      * @return The network protocol for the REST server.
      */
+    @Override
     public SubmitterProtocol getNetworkProtocol() {
         return protocol;
     }
