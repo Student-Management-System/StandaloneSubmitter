@@ -56,19 +56,16 @@ public class SubmissionResultHandler {
         if (null != commitExc.getErrorCode()) {
             switch (commitExc.getErrorCode()) {
             case NO_REPOSITORY_FOUND:
-                errorMsg = "Server konnte nicht erreicht werden. Bitte prüfen Sie Ihre Internetverbindung.\n"
-                        + "Versuchen Sie " + commitExc.getLocation() + " im Browser aufzurufen.\n"
-                        + "Sollte dieses auch nicht erfolgreich sein, so kontaktieren Sie bitte das "
-                        + ToolSettings.getConfig().getCourse().getTeamName()
-                        + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
+                errorMsg = I18nProvider.getText("submission.error.repository_not_found", commitExc.getLocation(),
+                        ToolSettings.getConfig().getCourse().getTeamName(), 
+                        ToolSettings.getConfig().getCourse().getTeamMail());
                 break;
             case COULD_NOT_CREATE_TEMP_DIR:
-                errorMsg = "Es konnte kein Temporärerordner auf der Festplatte angelegt werden.\n";
                 if (commitExc.getLocation() != null) {
-                    errorMsg += "Bitte prüfen Sie ob Sie auf " + commitExc.getLocation()
-                            + "  Lese-/Schreibzugriff haben.";
+                    errorMsg = I18nProvider.getText("submission.error.could_not_create_temp_dir", 
+                            commitExc.getLocation());
                 } else {
-                    errorMsg += "Bitte prüfen Sie ob Sie auf der Festplatte Lese-/Schreibzugriff haben.";
+                    errorMsg = I18nProvider.getText("submission.error.could_not_create_temp_dir1");
                 }
                 break;
             case NO_EXERCISE_FOUND:
@@ -87,26 +84,23 @@ public class SubmissionResultHandler {
                     location, commitExc.getLocation());
                 break;
             case CANNOT_COMMIT:
-                errorMsg = "Es konnten keine Hausaufgaben nach " + commitExc.getLocation() + " hochgeladen werden.\n"
-                        + "Prüfen Sie bitte ob eine Hausaufgabenabgabe für die angegebene "
-                        + "Hausaufgabe überhaupt vorgesehen ist.";
+                errorMsg = I18nProvider.getText("submission.error.cannot_commit", commitExc.getLocation());
                 break;
             case DO_STATUS_NOT_POSSIBLE:
-                errorMsg = "Es konnten keine Informationen über die zu submittenden Dateien gesammelt werden.\n"
-                        + "Die genaue Ursache hierfür ist unklar." + "Kontaktieren Sie bitte das "
-                        + ToolSettings.getConfig().getCourse().getTeamName()
-                        + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
+                errorMsg = I18nProvider.getText("submission.error.do_status_not_possible", 
+                        ToolSettings.getConfig().getCourse().getTeamName(), 
+                        ToolSettings.getConfig().getCourse().getTeamMail());
                 break;
             default:
-                errorMsg = "Ein unerwarter Fehler ist aufgetreten.\n" + "Kontaktieren Sie bitte das "
-                        + ToolSettings.getConfig().getCourse().getTeamName()
-                        + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
+                errorMsg = I18nProvider.getText("submission.error.basis", 
+                        ToolSettings.getConfig().getCourse().getTeamName(),
+                        ToolSettings.getConfig().getCourse().getTeamMail());
                 break;
             }
         } else {
-            errorMsg = "Ein unerwarter Fehler ist aufgetreten.\n" + "Kontaktieren Sie bitte das "
-                    + ToolSettings.getConfig().getCourse().getTeamName()
-                    + " (" + ToolSettings.getConfig().getCourse().getTeamMail() + ").";
+            errorMsg = I18nProvider.getText("submission.error.basis", 
+                    ToolSettings.getConfig().getCourse().getTeamName(),
+                    ToolSettings.getConfig().getCourse().getTeamMail());
         }
 
         handler.showErrorMessage(errorMsg);
