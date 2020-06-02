@@ -2,10 +2,15 @@ package de.uni_hildesheim.sse.submitter.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
@@ -16,6 +21,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.JToolTip;
+import javax.swing.Popup;
+import javax.swing.PopupFactory;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
@@ -49,6 +57,7 @@ class LoginDialog extends JDialog implements ActionListener {
     private JTextField nameField;
     private JPasswordField passwordField;
     private JLabel errorMessageLabel;
+    private Popup capsLockWarning;
     
     /**
      * Creates this dialog for the given parent.
@@ -60,12 +69,7 @@ class LoginDialog extends JDialog implements ActionListener {
         this.protocol = parent.getNetworkProtocol();
         
         // Initialize components
-        nameField = new JTextField(config.getUser());
-        nameField.addActionListener(this);
-        passwordField = new JPasswordField(config.getPW());
-        passwordField.addActionListener(this);
-        errorMessageLabel = new JLabel();
-        errorMessageLabel.setForeground(Color.RED);
+        initUserComponents();
         JButton button = new JButton(I18nProvider.getText("gui.elements.login"));
         button.addActionListener(this);
         
@@ -74,9 +78,9 @@ class LoginDialog extends JDialog implements ActionListener {
         topPanel.add(nameField);
         topPanel.add(new JLabel(I18nProvider.getText("gui.elements.password")));
         topPanel.add(passwordField);
+        topPanel.add(new JPanel());
+        topPanel.add(button);
         
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.add(button);
         
         JPanel contentPane = new JPanel();
         setContentPane(contentPane);
@@ -84,7 +88,6 @@ class LoginDialog extends JDialog implements ActionListener {
         contentPane.setLayout(new BorderLayout());
         contentPane.add(errorMessageLabel, BorderLayout.NORTH);
         contentPane.add(topPanel, BorderLayout.CENTER);
-        contentPane.add(bottomPanel, BorderLayout.SOUTH);
         
         addWindowListener(new WindowListener() {
             @Override
@@ -111,6 +114,37 @@ class LoginDialog extends JDialog implements ActionListener {
         setModal(true);
         setLocationRelativeTo(parent);
         setVisible(true);
+    }
+
+    /**
+     * Creates the items, which are also used outside of the constructor.
+     */
+    private void initUserComponents() {
+        nameField = new JTextField(config.getUser());
+        nameField.addActionListener(this);
+        passwordField = new JPasswordField(config.getPW());
+        passwordField.addActionListener(this);
+        passwordField.addKeyListener(new KeyAdapter() {
+            
+            @Override
+            public void keyPressed(KeyEvent evt) {
+                capsLockWarn();
+            }
+        });
+        passwordField.addFocusListener(new FocusListener() {
+            
+            @Override
+            public void focusLost(FocusEvent evt) {
+                hideCapsLockWarning();
+            }
+            
+            @Override
+            public void focusGained(FocusEvent evt) {
+                capsLockWarn();
+            }
+        });
+        errorMessageLabel = new JLabel();
+        errorMessageLabel.setForeground(Color.RED);
     }
     
     /**
@@ -167,4 +201,33 @@ class LoginDialog extends JDialog implements ActionListener {
         }
     }
     
+    /**
+     * Warns the user if caps lock is pressed.
+     */
+    private void capsLockWarn() {
+        boolean capsLockPressed = Toolkit.getDefaultToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK);
+        if (capsLockPressed) {
+            Point location = passwordField.getLocationOnScreen();
+            JToolTip toolTip = new JToolTip();
+            toolTip.setTipText("Caps Lock pressed.");
+            int x = location.x;
+            int y = location.y - (toolTip.getPreferredSize().height / 2);
+            
+            capsLockWarning = PopupFactory.getSharedInstance().getPopup(LoginDialog.this, toolTip, x, y);
+            capsLockWarning.show();
+            
+        } else {
+            hideCapsLockWarning();
+        }
+    }
+    
+    /**
+     * Hides the caps lock warning tooltip if it is displayed.
+     */
+    private void hideCapsLockWarning() {
+        if (capsLockWarning != null) {
+            capsLockWarning.hide();
+            capsLockWarning = null;
+        }
+    }
 }
