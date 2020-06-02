@@ -123,10 +123,9 @@ public class SubmissionResultHandler {
             ErrorParser parser = new ErrorParser(errorsToString(errorMsg));
             String message;
             if (errorMsg.getErrorCode().equals(SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED)) {
-                message = "Das Projekt wurde abgegeben, es wurden jedoch Fehler bei der Abgabe festgestellt:";
+                message = I18nProvider.getText("submission.error.errors_found");
             } else {
-                message = "Das eingereichte Projekt enthält Fehler und wurde daher nicht angenommen.\n"
-                        + "Bitte korrigieren Sie folgende Fehler und versuchen es dann erneut:";
+                message = I18nProvider.getText("submission.error.project_not_accepted");
             }
             handler.showInfoMessage(message, parser.getErrors());
         }
