@@ -99,10 +99,10 @@ public class RemoteRepository {
      */
     public boolean checkConnection() {
         boolean connected = false;
+        
         try {
-            Collection<?> revisions = repository.log(new String[]{""}, null, 0, repository.getLatestRevision(),
-                false, false);
-            connected = !revisions.isEmpty();
+            repository.testConnection();
+            connected = true;
         } catch (SVNException e) {
             LOGGER.warn("Could not connect to sumbission server \"" + ToolSettings.getConfig().getRepositoryURL()
                 + "\"", e);
