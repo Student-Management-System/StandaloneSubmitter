@@ -114,10 +114,9 @@ public class SubmissionResultHandler {
         SVNErrorMessage errorMsg = info.getErrorMessage();
         if (null == errorMsg) {
             if (-1 == info.getNewRevision()) {
-                handler.showInfoMessage("Keine Dateiänderungen festgestellt,\n"
-                        + "dementsprechend wurden auch keine Änderungen\n" + "hochgeladen.");
+                handler.showInfoMessage(I18nProvider.getText("submission.result.no_changes"));
             } else {
-                handler.showInfoMessage("Dateien wurden erfolgreich hochgeladen.");
+                handler.showInfoMessage(I18nProvider.getText("submission.result.success"));
             }
         } else {
             ErrorParser parser = new ErrorParser(errorsToString(errorMsg));
