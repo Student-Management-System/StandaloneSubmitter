@@ -209,6 +209,7 @@ class LoginDialog extends JDialog implements ActionListener {
         if (capsLockPressed) {
             Point location = passwordField.getLocationOnScreen();
             JToolTip toolTip = new JToolTip();
+            // TODO SE: Use I18n after revision here
             toolTip.setTipText("Caps Lock pressed.");
             int x = location.x;
             int y = location.y - (toolTip.getPreferredSize().height / 2);
