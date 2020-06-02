@@ -1,21 +1,14 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.StringTokenizer;
 
-import javax.swing.JOptionPane;
-
-import org.tmatesoft.svn.core.SVNAuthenticationException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNURL;
@@ -39,6 +32,8 @@ public class RemoteRepository {
 
     public static final String MODE_SUBMISSION = "SUBMISSION";
     public static final String MODE_REPLAY = "REPLAY";
+    
+    private static final Logger LOGGER = LogManager.getLogger(RemoteRepository.class);
     
     private SubmissionConfiguration config;
     private String target;
@@ -70,60 +65,6 @@ public class RemoteRepository {
     }
     
     /**
-     * Gets all repositories that the user can commit to.
-     * 
-     * @param wantedMode The mode of the repo.
-     * @return list of repository names
-     * 
-     * @throws SVNAuthenticationException when the login details are wrong
-     * @throws ServerNotFoundException when unable to connect to the server
-     */
-    public List<String> getRepositories(String wantedMode)
-        throws SVNAuthenticationException, ServerNotFoundException {
-        
-        List<String> result = new ArrayList<String>();
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            repository.getFile("permissions", -1, null, out);
-            LineNumberReader in = new LineNumberReader(
-                new InputStreamReader(new ByteArrayInputStream(
-                    out.toByteArray())));
-
-            String line;
-            do {
-                line = in.readLine();
-                if (null != line) {
-                    StringTokenizer tokenizer = new StringTokenizer(line, "\t");
-                    if (2 == tokenizer.countTokens()) {
-                        String path = tokenizer.nextToken();
-                        String mode = tokenizer.nextToken();
-                        if (path.length() > 0 && mode.length() > 0) {
-                            if (path.startsWith("/")) {
-                                path = path.substring(1);
-                            }
-                            if (mode.equalsIgnoreCase(wantedMode)) {
-                                result.add(path);
-                            }
-                        }
-                    }
-                }
-            } while (null != line && in.ready());
-            in.close();
-            out.close();
-        } catch (SVNAuthenticationException e) {
-            throw e;
-        } catch (SVNException e) {
-            if (e.getCause() instanceof UnknownHostException) {
-                throw new ServerNotFoundException(target);
-            }
-            JOptionPane.showMessageDialog(null, e.getMessage());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, e.getMessage());
-        }
-        return result;
-    }
-    
-    /**
      * Returns the history of the repository.
      * @return a list of Strings, where each String represents a single version
      * @throws SVNException if fetching the history information fails
@@ -148,6 +89,26 @@ public class RemoteRepository {
         }
         
         return result;
+    }
+    
+    /**
+     * Tests if a connection can be established to the specified repository server, which is used as submission server.
+     * Tests that the provided credentials are accepted by the server.
+     * @return <tt>true</tt> if the submission server can be access with the provided credentials, <tt>false</tt>
+     *     otherwise
+     */
+    public boolean checkConnection() {
+        boolean connected = false;
+        try {
+            Collection<?> revisions = repository.log(new String[]{""}, null, 0, repository.getLatestRevision(),
+                false, false);
+            connected = !revisions.isEmpty();
+        } catch (SVNException e) {
+            LOGGER.warn("Could not connect to sumbission server \"" + ToolSettings.getConfig().getRepositoryURL()
+                + "\"", e);
+        }
+        
+        return connected;
     }
     
     /**

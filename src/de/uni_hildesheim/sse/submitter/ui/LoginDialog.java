@@ -17,10 +17,9 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import org.tmatesoft.svn.core.SVNAuthenticationException;
-
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.ServerNotFoundException;
 import net.ssehub.exercisesubmitter.protocol.backend.UnknownCredentialsException;
@@ -132,17 +131,20 @@ class LoginDialog extends JDialog implements ActionListener {
         
         String errorMessage = null;
         try {
+            // First check: Check that credentials are supported by REST servers
             boolean success = protocol.login(user, pw);
             if (success) {
                 try {
                     repository = new RemoteRepository(config, protocol);
-                    // get repository list here to test if login information are correct
-                    repository.getRepositories(RemoteRepository.MODE_SUBMISSION);
+                    // Double check: Check that credentials are also accepted by the submission server
+                    success = repository.checkConnection();
+                    if (!success) {
+                        errorMessage = I18nProvider.getText("gui.error.login_wrong_repository",
+                            ToolSettings.getConfig().getCourse().getTeamName(), 
+                            ToolSettings.getConfig().getCourse().getTeamMail());                        
+                    }
                 } catch (ServerNotFoundException e) {
-                    errorMessage = I18nProvider.getText("gui.error.server_not_found")
-                            + " " + e.getAddress();
-                } catch (SVNAuthenticationException e) {
-                    errorMessage = I18nProvider.getText("gui.error.login_wrong");
+                    errorMessage = I18nProvider.getText("gui.error.server_not_found") + " " + e.getAddress();
                 }
             } else {
                 // TODO SE: Use I18n after revision here

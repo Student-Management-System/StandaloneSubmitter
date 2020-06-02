@@ -65,7 +65,7 @@ public class SubmissionResultHandler {
                     errorMsg = I18nProvider.getText("submission.error.could_not_create_temp_dir", 
                             commitExc.getLocation());
                 } else {
-                    errorMsg = I18nProvider.getText("submission.error.could_not_create_temp_dir1");
+                    errorMsg = I18nProvider.getText("submission.error.could_not_create_temp_dir_no_location_available");
                 }
                 break;
             case NO_EXERCISE_FOUND:
