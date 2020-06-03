@@ -50,6 +50,7 @@ class LoginDialog extends JDialog implements ActionListener {
     
     private RemoteRepository repository;
     private SubmitterProtocol protocol;
+    private Window parent;
     
     /*
      * GUI components
@@ -67,13 +68,14 @@ class LoginDialog extends JDialog implements ActionListener {
     LoginDialog(Window parent) {
         this.config = parent.getConfiguration();
         this.protocol = parent.getNetworkProtocol();
+        this.parent = parent;
         
         // Initialize components
         initUserComponents();
         JButton button = new JButton(I18nProvider.getText("gui.elements.login"));
         button.addActionListener(this);
         
-        JPanel topPanel = new JPanel(new GridLayout(0, 2));
+        JPanel topPanel = new JPanel(new GridLayout(0, 2, 2, 2));
         topPanel.add(new JLabel(I18nProvider.getText("gui.elements.name")));
         topPanel.add(nameField);
         topPanel.add(new JLabel(I18nProvider.getText("gui.elements.password")));
@@ -198,6 +200,7 @@ class LoginDialog extends JDialog implements ActionListener {
         } else {
             errorMessageLabel.setText(errorMessage);
             pack();
+            setLocationRelativeTo(parent);
         }
     }
     
@@ -207,16 +210,16 @@ class LoginDialog extends JDialog implements ActionListener {
     private void capsLockWarn() {
         boolean capsLockPressed = Toolkit.getDefaultToolkit().getLockingKeyState(KeyEvent.VK_CAPS_LOCK);
         if (capsLockPressed) {
-            Point location = passwordField.getLocationOnScreen();
-            JToolTip toolTip = new JToolTip();
-            // TODO SE: Use I18n after revision here
-            toolTip.setTipText("Caps Lock pressed.");
-            int x = location.x;
-            int y = location.y - (toolTip.getPreferredSize().height / 2);
-            
-            capsLockWarning = PopupFactory.getSharedInstance().getPopup(LoginDialog.this, toolTip, x, y);
-            capsLockWarning.show();
-            
+            if (null == capsLockWarning) {
+                Point location = passwordField.getLocationOnScreen();
+                JToolTip toolTip = new JToolTip();
+                toolTip.setTipText(I18nProvider.getText("gui.warning.caps_lock"));
+                int x = location.x;
+                int y = location.y - (toolTip.getPreferredSize().height - 5);
+                
+                capsLockWarning = PopupFactory.getSharedInstance().getPopup(LoginDialog.this, toolTip, x, y);
+                capsLockWarning.show();
+            }
         } else {
             hideCapsLockWarning();
         }
