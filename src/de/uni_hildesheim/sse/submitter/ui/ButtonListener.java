@@ -8,6 +8,8 @@ import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.Starter;
@@ -17,6 +19,7 @@ import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
  * Listener for all buttons in the GUI.
  * 
  * @author Adam Krafczyk
+ * @author El-Sharkawy
  *
  */
 class ButtonListener implements ActionListener {
@@ -26,6 +29,8 @@ class ButtonListener implements ActionListener {
     static final String ACTION_HISTORY       = "History";
     static final String ACTION_BROWSE_FOLDER = "Browse";
     static final String ACTION_REVIEW        = "Review";
+    
+    private static final Logger LOGGER = LogManager.getLogger(ButtonListener.class);
     
     private Window parent;
     
@@ -40,19 +45,55 @@ class ButtonListener implements ActionListener {
     
     @Override
     public void actionPerformed(ActionEvent evt) {
-        String command = evt.getActionCommand();
-        if (command.equals(ACTION_BROWSE_FOLDER)) {
+        /*
+         * SE: According to https://docs.oracle.com/javase/8/docs/technotes/guides/language/strings-switch.html
+         * switch on Strings should be more efficient than if-else-blocks and I thing it's better readable
+         */
+        switch (evt.getActionCommand()) {
+        case ACTION_BROWSE_FOLDER:
             createFolderChooser();
-        } else if (command.equals(ACTION_SUBMIT)) {
+            break;
+        case ACTION_SUBMIT:
             parent.toggleButtons(false);
             parent.submit();
-        } else if (command.equals(ACTION_REPLAY)) {
+            break;
+        case ACTION_REPLAY:
+            openReplayDialog();
+            break;
+        case ACTION_HISTORY:
+            parent.clearLog();
+            parent.toggleButtons(false);
+            try {   
+                parent.showHistory(parent.getRemoteRepository().getHistory());
+            } catch (SVNException | IOException e) {
+                // Shouldn't happen
+                parent.showErrorMessage(I18nProvider.getText("gui.error.login_wrong"));
+                LOGGER.warn("Could not show history.", e);
+            }
+            parent.toggleButtons(true);
+            break;
+        case ACTION_REVIEW:
             parent.clearLog();
             if (parent.getSelectedPath().trim().isEmpty()) {
                 parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
-                return;
+            } else {
+                new ReviewDialog(parent);
             }
-            
+            break;
+        default:
+            LOGGER.debug("Unknown action command: {}", evt.getActionCommand());
+            break;
+        }
+    }
+
+    /**
+     * Creates and handles the replay previous version dialog.
+     */
+    private void openReplayDialog() {
+        parent.clearLog();
+        if (parent.getSelectedPath().trim().isEmpty()) {
+            parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
+        } else {
             parent.toggleButtons(false);
             int result = JOptionPane.showConfirmDialog(parent, I18nProvider.getText("gui.warning.delete_dir_on_replay"),
                     I18nProvider.getText("gui.elements.replay"), JOptionPane.OK_CANCEL_OPTION,
@@ -68,27 +109,6 @@ class ButtonListener implements ActionListener {
                 }
             } else {
                 parent.toggleButtons(true);
-            }
-        } else if (command.equals(ACTION_HISTORY)) {
-            parent.clearLog();
-            parent.toggleButtons(false);
-            try {   
-                parent.showHistory(parent.getRemoteRepository().getHistory());
-            } catch (SVNException | IOException e) {
-                // Shouldn't happen
-                parent.showErrorMessage(I18nProvider.getText("gui.error.login_wrong"));
-            }
-            parent.toggleButtons(true);
-        } else if (command.equals(ACTION_REVIEW)) {
-            parent.clearLog();
-            if (parent.getSelectedPath().trim().isEmpty()) {
-                parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
-                return;
-            }
-            new ReviewDialog(parent);
-        } else {
-            if (Starter.DEBUG) {
-                System.err.println("Unknown action command: " + command);
             }
         }
     }
