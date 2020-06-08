@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 
+import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
 import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
@@ -48,7 +49,7 @@ class SubmissionThread extends Thread {
             translator.handleCommitResult(result.getCommitInfo());
             if (result.getNumJavFiles() <= 0) {
                 ISubmissionOutputHandler handler = translator.getHandler();
-                handler.showErrorMessage("No java files submitted.");
+                handler.showErrorMessage(I18nProvider.getText("submission.error.no_java_files"));
             }
         } catch (IOException e) {
             LogManager.getLogger(SubmissionThread.class).warn("Could not clean up temp folder.", e);
