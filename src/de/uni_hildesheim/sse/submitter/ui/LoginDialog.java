@@ -183,15 +183,12 @@ class LoginDialog extends JDialog implements ActionListener {
                     errorMessage = I18nProvider.getText("gui.error.server_not_found") + " " + e.getAddress();
                 }
             } else {
-                // TODO SE: Use I18n after revision here
-                errorMessage = "Unknown error occured. Could no log into the Student Management System.";
+                errorMessage = I18nProvider.getText("gui.error.unknown_error");
             }
         } catch (UnknownCredentialsException e) {
-            // TODO SE: Use I18n after revision here
-            errorMessage = "Credentials are unknown by the Student Management System.";
+            errorMessage = I18nProvider.getText("gui.error.unknown_credentials");
         } catch (net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException e) {
-            // TODO SE: Use I18n after revision here
-            errorMessage = "Could not reach the Student Management System.";
+            errorMessage = I18nProvider.getText("gui.error.system_unreachable");
         }
        
         
