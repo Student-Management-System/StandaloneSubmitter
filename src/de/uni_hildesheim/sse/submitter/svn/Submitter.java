@@ -23,6 +23,7 @@ import org.tmatesoft.svn.core.wc.SVNCommitClient;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
+import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
@@ -117,7 +118,7 @@ public class Submitter implements AutoCloseable {
             }
 
             // Commit exercise
-            String commitMsg = "Hausaufgabenabgabe von " + config.getUser();
+            String commitMsg = I18nProvider.getText("submission.commit.exercise") + config.getUser();
             try {
                 info = client.doCommit(new File[] {tempFolder}, false, commitMsg, null, null, false, false,
                         SVNDepth.INFINITY);
