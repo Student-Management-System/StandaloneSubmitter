@@ -14,6 +14,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 
 /**
@@ -121,10 +122,9 @@ public class ErrorParser {
             errors = new ErrorDescription[1];
             errors[0] = new ErrorDescription();
             errors[0].setSeverity(SeverityType.ERROR);
-            errors[0].setSolution("Unerwarteter Fehler " 
-                + (null != fallback ? ": " + fallback : ".") + "\n"
-                + "Bitte kontaktieren Sie einen Tutor unter Angabe von "
-                + "Datum/Zeit bzw. Abgabe-Id dieser Abgabe.");
+            errors[0].setSolution(I18nProvider.getText("gui.error.unexpected_error0") 
+                + (null != fallback ? ": " + fallback : ".")
+                + I18nProvider.getText("gui.error.unexpected_error1"));
         }
 
         return errors;
