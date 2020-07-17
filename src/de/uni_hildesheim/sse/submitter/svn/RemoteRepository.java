@@ -80,8 +80,7 @@ public class RemoteRepository {
         } catch (NetworkException e) {
             throw new IOException(e);
         }
-        Collection<?> revisions = repository.log(targetPaths, null, 0,
-                    repository.getLatestRevision(), false, false);
+        Collection<?> revisions = repository.log(targetPaths, null, 0, repository.getLatestRevision(), false, false);
         
         for (Object o : revisions) {
             SVNLogEntry logEntry = (SVNLogEntry) o;
@@ -161,8 +160,8 @@ public class RemoteRepository {
         } catch (NetworkException e) {
             throw new IOException(e);
         }
-        Collection<?> revisions = repository.log(targetPaths, null, 0,
-                    repository.getLatestRevision(), false, false);
+        
+        Collection<?> revisions = repository.log(targetPaths, null, 0, repository.getLatestRevision(), false, false);
         
         for (Object o : revisions) {
             SVNLogEntry logEntry = (SVNLogEntry) o;
