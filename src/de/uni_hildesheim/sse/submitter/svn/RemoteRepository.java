@@ -75,7 +75,7 @@ public class RemoteRepository {
         
         String[] targetPaths = null;
         try {
-            String[] remotePath = protocol.getPathToSubmission(config.getExercise());
+            String[] remotePath = protocol.getPathToSubmission(config.getExercise()).getPath();
             targetPaths = new String[]{remotePath[0] + "/" + remotePath[1]};
         } catch (NetworkException e) {
             throw new IOException(e);
@@ -156,7 +156,7 @@ public class RemoteRepository {
         
         String[] targetPaths = null;
         try {
-            String[] remotePath = protocol.getPathToSubmission(config.getExercise());
+            String[] remotePath = protocol.getPathToSubmission(config.getExercise()).getPath();
             targetPaths = new String[]{remotePath[0] + "/" + remotePath[1]};
         } catch (NetworkException e) {
             throw new IOException(e);

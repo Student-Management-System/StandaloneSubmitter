@@ -329,7 +329,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         } catch (SVNException e) {
             if (e.getMessage().contains("404 Not Found")) {
                 try {
-                    String[] path = protocol.getPathToSubmission(assignment);
+                    String[] path = protocol.getPathToSubmission(assignment).getPath();
                     showErrorMessage(I18nProvider.getText("gui.error.replay.no_submission_error", path[0], path[1],
                         ToolSettings.getConfig().getCourse().getTeamMail()));
                 } catch (NetworkException e1) {

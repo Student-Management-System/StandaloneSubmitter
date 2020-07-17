@@ -85,7 +85,7 @@ public class Submitter implements AutoCloseable {
         SVNURL url = null;
         String target = null;
         try {
-            target = protocol.getSubmissionUrl(config.getExercise());
+            target = protocol.getPathToSubmission(config.getExercise()).getSubmissionURL();
             url = SVNURL.parseURIEncoded(target);
         } catch (NetworkException e1) {
             throw new SubmitException(ErrorType.COULD_NOT_QUERY_MANAGEMENT_SYSTEM, config.getExercise().getName());
