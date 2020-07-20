@@ -34,6 +34,7 @@ import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmissionTarget;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
@@ -329,8 +330,9 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         } catch (SVNException e) {
             if (e.getMessage().contains("404 Not Found")) {
                 try {
-                    String[] path = protocol.getPathToSubmission(assignment).getPath();
-                    showErrorMessage(I18nProvider.getText("gui.error.replay.no_submission_error", path[0], path[1],
+                    SubmissionTarget dest = protocol.getPathToSubmission(assignment);
+                    showErrorMessage(I18nProvider.getText("gui.error.replay.no_submission_error",
+                        dest.getAssignmentName(), dest.getSubmissionPath(),
                         ToolSettings.getConfig().getCourse().getTeamMail()));
                 } catch (NetworkException e1) {
                     LOGGER.error("Could not replay submission from server", e);

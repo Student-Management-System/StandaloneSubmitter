@@ -74,7 +74,7 @@ public class SubmissionResultHandler {
                     : I18nProvider.getText("submission.user");
                 String location;
                 try {
-                    location = handler.getNetworkProtocol().getPathToSubmission(exercise).getPath()[1];
+                    location = handler.getNetworkProtocol().getPathToSubmission(exercise).getSubmissionPath();
                 } catch (NetworkException e) {
                     location = I18nProvider.getText("errors.stdmanagemt.unreachable");
                     LOGGER.warn("Could not query REST server", e);
