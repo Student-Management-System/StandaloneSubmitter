@@ -1,5 +1,6 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +29,7 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  * @author Adam Krafczyk
  * @author El-Sharkawy
  */
-public class RemoteRepository {
+public class RemoteRepository implements Closeable {
 
     public static final String MODE_SUBMISSION = "SUBMISSION";
     public static final String MODE_REPLAY = "REPLAY";
@@ -222,8 +223,8 @@ public class RemoteRepository {
     }
     
     @Override
-    public void finalize() throws Throwable {
+    public void close() {
         repository.closeSession();
-        super.finalize();
     }
+    
 }
