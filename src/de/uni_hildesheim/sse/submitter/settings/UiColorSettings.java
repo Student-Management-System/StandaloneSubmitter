@@ -1,5 +1,7 @@
 package de.uni_hildesheim.sse.submitter.settings;
 
+import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorType;
+
 /**
  * Configures the UI (i.e., color).
  * @author El-Sharkawy
@@ -74,6 +76,43 @@ public class UiColorSettings {
      */
     public String getHookColor() {
         return hookColor;
+    }
+    
+    /**
+     * Gets a color string for a given {@link ErrorType}.
+     *  
+     * @param type The type of error to get an appropriate color for.
+     * 
+     * @return The color string.
+     */
+    public String getColor(ErrorType type) {
+        String color;
+        switch (type) {
+        case JAVAC:
+            color = getJavacColor();
+            break;
+            
+        case CHECKSTYLE:
+            color = getCheckstyleColor();
+            break;
+            
+        case HOOK:
+            color = getHookColor();
+            break;
+            
+        // legac jSvnSubmitHook
+        case JUNIT:
+            color = getJunitColor();
+            break;
+        case COMMIT:
+            color = getCommitColor();
+            break;
+        
+        default:
+            color = getDefaultColor();
+            break;
+        }
+        return color;
     }
     
     /**

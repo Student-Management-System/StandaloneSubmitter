@@ -2,11 +2,25 @@ package de.uni_hildesheim.sse.submitter.svn.hookErrors;
 
 /**
  * The different tools/checker of the hook script, which may return errors.
+ * 
  * @author El-Sharkawy
- *
+ * @author Adam
  */
 public enum ErrorType {
-    JAVAC("javac"), CHECKSTYLE("checkstyle"), JUNIT("junit"), COMMIT("commit-handler"), HOOK("hook");
+    FILE_SIZE("file-size"),
+    ENCODING("encoding"),
+    ECLIPSE_CONFIG("eclipse-configuration"),
+    JAVAC("javac"),
+    CHECKSTYLE("checkstyle"),
+    
+    /**
+     * Signifies an error by the hook itself, i.e. internal errors.
+     */
+    HOOK("hook"),
+    
+    // from old jSvnSubmitHook
+    JUNIT("junit"),
+    COMMIT("commit-handler");
 
     private String toolName;
 
@@ -17,6 +31,15 @@ public enum ErrorType {
     private ErrorType(String toolName) {
         this.toolName = toolName;
     }
+    
+    /**
+     * Returns the tool-name.
+     * 
+     * @return The tool-name.
+     */
+    public String getToolName() {
+        return toolName;
+    }
 
     /**
      * Returns the {@link ErrorType} specified by the tool name.
@@ -24,6 +47,11 @@ public enum ErrorType {
      * @return The {@link ErrorType} or <tt>null</tt> if no literal was found with the specified name.
      */
     public static ErrorType getByToolName(String toolName) {
+        // the old jSvnSubmitHook had a different name for the file-size check
+        if ("file-size-check".equals(toolName)) {
+            toolName = "file-size";
+        }
+        
         ErrorType result = null;
         for (ErrorType type : values()) {
             if (type.toolName.equalsIgnoreCase(toolName)) {

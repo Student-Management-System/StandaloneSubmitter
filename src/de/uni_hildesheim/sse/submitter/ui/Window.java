@@ -383,30 +383,10 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         logArea.append("\n");
         for (ErrorDescription description : descriptions) {
             if (null != description.getType()) {
-                switch (description.getType()) {
-                case JAVAC:
-                    logArea.append(I18nProvider.getText("gui.log.compile") + " ",
-                        colors().getJavacColor(), true);
-                    break;
-                case CHECKSTYLE:
-                    logArea.append(I18nProvider.getText("gui.log.checkstyle") + " ",
-                        colors().getCheckstyleColor(), true);
-                    break;
-                case JUNIT:
-                    logArea.append(I18nProvider.getText("gui.log.logic") + " ",
-                        colors().getJunitColor(), true);
-                    break;
-                case COMMIT:
-                    logArea.append(I18nProvider.getText("gui.log.commit") + " ",
-                        colors().getCommitColor(), true);
-                    break;
-                case HOOK:
-                    logArea.append(I18nProvider.getText("gui.log.hook") + " ",
-                        colors().getHookColor(), true);
-                    break;
-                default:
-                    break;
-                }
+                
+                logArea.append(I18nProvider.getText("gui.tool." + description.getType().getToolName()) + " ",
+                        colors().getColor(description.getType()), true);
+                
             }
             if (null != description.getSeverity()) {
                 switch (description.getSeverity()) {
