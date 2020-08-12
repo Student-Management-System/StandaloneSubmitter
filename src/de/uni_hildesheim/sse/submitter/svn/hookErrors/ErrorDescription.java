@@ -1,7 +1,6 @@
 package de.uni_hildesheim.sse.submitter.svn.hookErrors;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.settings.HookMessageSettings;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 
 /**
@@ -100,27 +99,13 @@ public class ErrorDescription {
     }
     
     /**
-     * Short hand to retrieve the settings for the submission hook.
-     * @return The settings for the submission hook.
-     */
-    private HookMessageSettings getConfig() {
-        return ToolSettings.getConfig().getCommitMessages();
-    }
-
-
-    /**
      * Setter for the Solution message.
      * @param solution The "message" attribute of the hook error message.
      */
     public void setSolution(String solution) {
-        if (getConfig().getMissingJava().equals(solution)) {
-            this.solution = I18nProvider.getText("errors.messages.no_java_submitted");
-        } else if (getConfig().getContainsTabs().equals(solution)) {
-            this.solution = I18nProvider.getText("errors.messages.tabs_included");
-        } else if (getConfig().getMissingJavaDoc().equals(solution)) {
-            this.solution = I18nProvider.getText("errors.messages.missingJavaDoc");
-        } else if (getConfig().getCheckError().equals(solution)) {
-            this.solution = I18nProvider.getText("error.unknownError");
+        String translationKey = ToolSettings.getConfig().getMessageTranslations().get(solution);
+        if (translationKey != null) {
+            this.solution = I18nProvider.getText(translationKey);
         } else {
             this.solution = solution;
         }

@@ -12,14 +12,18 @@
     "teamName": "JAVA I Team",
     "teamMail": "programmierung1@uni-hildesheim.de"
   },
-  "commitMessages": {
-    "failed": "Commit failed (details follow):",
-    "blocked": "Commit blocked by pre-commit hook (exit code 1) with output:\\n",
-    "missingJava": "No Java file submitted.",
-    "containsTabs": "File contains tab characters (this is the first instance).",
-    "missingJavaDoc": "Missing a Javadoc comment.",
-    "checkError": "A check error was detected but no concrete error message was emitted. Please contact the supervisors."
+
+  "messageCommitFailed": "Commit failed (details follow):",
+  "messageCommitRejected": "Commit blocked by pre-commit hook (exit code 1) with output:\n",
+  "messageTranslations": {
+    "No Java files found": "errors.messages.no_java_submitted",
+    "An internal error occurred": "errors.messages.unknownError",
+    "An internal error occurred while checking file encoding": "errors.messages.unknownError",
+    "An internal error occurred while checking eclipse project": "errors.messages.unknownError",
+    "An internal error occurred while running javac": "errors.messages.unknownError",
+    "An internal error occurred while running Checkstyle": "errors.messages.unknownError"
   },
+
   "colorSettings": {
     "defaultColor": "#000000",
     "javacColor": "#8A008A",

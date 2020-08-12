@@ -1,5 +1,7 @@
 package de.uni_hildesheim.sse.submitter.settings;
 
+import java.util.Map;
+
 /**
  * Holds the configuration for tool (does not contain the configuration of the user).
  * @author El-Sharkawy
@@ -17,7 +19,11 @@ public class ToolConfiguration {
     private String authURL;
     
     private CourseSettings course;
-    private HookMessageSettings commitMessages;
+    
+    private String messageCommitFailed;
+    private String messageCommitRejected;
+    private Map<String, String> messageTranslations;
+    
     private UiColorSettings colorSettings;
     
     /**
@@ -78,11 +84,27 @@ public class ToolConfiguration {
     }
     
     /**
-     * Configuration to parse answers of the commit hook.
-     * @return the Configuration to parse answers of the commit hook.
+     * Returns the message that the commit has failed.
+     * @return The commit-failed message.
      */
-    public HookMessageSettings getCommitMessages() {
-        return commitMessages;
+    public String getMessageCommitFailed() {
+        return messageCommitFailed;
+    }
+    
+    /**
+     * Returns the message that the commit was rejected by the pre-commit hook.
+     * @return The commit-rejected message.
+     */
+    public String getMessageCommitRejected() {
+        return messageCommitRejected;
+    }
+    
+    /**
+     * Returns a map of hook messages as keys and i18n keys as values.
+     * @return A map of hook message translations.
+     */
+    public Map<String, String> getMessageTranslations() {
+        return messageTranslations;
     }
     
     /**
@@ -151,11 +173,27 @@ public class ToolConfiguration {
     }
     
     /**
-     * Configuration to parse answers of the commit hook.
-     * @param commitMessages Configuration to parse answers of the commit hook.
+     * Sets the message that the commit failed.
+     * @param messageCommitFailed The commit-failed message.
      */
-    public void setCommitMessages(HookMessageSettings commitMessages) {
-        this.commitMessages = commitMessages;
+    public void setMessageCommitFailed(String messageCommitFailed) {
+        this.messageCommitFailed = messageCommitFailed;
+    }
+    
+    /**
+     * Sets the message that the commit was rejected by the pre-commit hook.
+     * @param messageCommitRejected The commit-rejected message.
+     */
+    public void setMessageCommitRejected(String messageCommitRejected) {
+        this.messageCommitRejected = messageCommitRejected;
+    }
+    
+    /**
+     * Sets a map of hook messages as keys and i18n keys as values.
+     * @param messageTranslations A map of hook message translations.
+     */
+    public void setMessageTranslations(Map<String, String> messageTranslations) {
+        this.messageTranslations = messageTranslations;
     }
     
     /**

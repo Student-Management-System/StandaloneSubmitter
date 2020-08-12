@@ -147,8 +147,8 @@ public class SubmissionResultHandler {
         } else {
             while (errorMsg.hasChildErrorMessage()) {
                 String error = errorMsg.getMessageTemplate();
-                if (!ToolSettings.getConfig().getCommitMessages().getFailed().equals(error)) {
-                    error = error.substring(ToolSettings.getConfig().getCommitMessages().getBlocked().length());
+                if (!ToolSettings.getConfig().getMessageCommitFailed().equals(error)) {
+                    error = error.substring(ToolSettings.getConfig().getMessageCommitRejected().length());
                     result.append(error);
                     result.append("\n");
                 }
