@@ -100,7 +100,7 @@ public class UiColorSettings {
             color = getHookColor();
             break;
             
-        // legac jSvnSubmitHook
+        // legacy jSvnSubmitHook
         case JUNIT:
             color = getJunitColor();
             break;

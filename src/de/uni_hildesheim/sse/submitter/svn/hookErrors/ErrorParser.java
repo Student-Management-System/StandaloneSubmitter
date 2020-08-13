@@ -14,6 +14,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 
@@ -73,6 +74,9 @@ public class ErrorParser {
                     doc = dBuilder.parse(xml);
                     doc.getDocumentElement().normalize();
                 } catch (SAXException | IOException | ParserConfigurationException e) {
+                    if (Starter.DEBUG) {
+                        e.printStackTrace();
+                    }
                     fallback = e.getMessage();
                 }
             } else {

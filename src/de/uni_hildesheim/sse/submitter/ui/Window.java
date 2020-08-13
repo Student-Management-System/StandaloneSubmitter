@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.Starter;
+import de.uni_hildesheim.sse.submitter.TestSubmitterProtocol;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolConfiguration;
@@ -81,8 +82,13 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(600, 500);
         ToolConfiguration tConf = ToolSettings.getConfig();
-        protocol = new SubmitterProtocol(tConf.getAuthURL(), tConf.getMgmtURL(), tConf.getCourse().getCourse(),
-            tConf.getRepositoryURL());
+        if (Starter.DEBUG_NO_MGMT_SYTEM) {
+            protocol = new TestSubmitterProtocol(tConf.getAuthURL(), tConf.getMgmtURL(), tConf.getCourse().getCourse(),
+                    tConf.getRepositoryURL());
+        } else {
+            protocol = new SubmitterProtocol(tConf.getAuthURL(), tConf.getMgmtURL(), tConf.getCourse().getCourse(),
+                    tConf.getRepositoryURL());
+        }
         String semester = tConf.getCourse().getSemester();
         if (null != semester) {
             protocol.setSemester(semester);
@@ -109,9 +115,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         }
         
         if (Starter.DEBUG) {
-            toggleButtons(false);
             sourceDirectoryField.setText(new File("example").getAbsolutePath());
-            submit();
         }
     }
     

@@ -17,7 +17,23 @@ import de.uni_hildesheim.sse.submitter.ui.Window;
  *
  */
 public class Starter {
+    
+    /**
+     * General debug mode.
+     */
     public static final boolean DEBUG = false;
+    
+    /**
+     * Disable management submission. Will emulate a submission for Testblatt01Aufgabe01/JP001.
+     * See TestSubmitterProtocol in test sources.
+     */
+    public static final boolean DEBUG_NO_MGMT_SYTEM = true;
+    
+    /**
+     * Disable SVN repository submission. Will emulate a hook response with a POST-commit failure with a variety of
+     * different errors and warnings. See SubmissionThread.createMockErrors().
+     */
+    public static final boolean DEBUG_NO_SUBMISSION = false;
     
     /**
      * Starts the program.
