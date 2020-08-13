@@ -1,9 +1,10 @@
 package de.uni_hildesheim.sse.submitter.i18n;
 
-import java.util.Locale;
-import java.util.Properties;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import de.uni_hildesheim.sse.submitter.AbstractPropertiesReader;
+import de.uni_hildesheim.sse.submitter.Starter;
 
 /**
  * This class is responsible for creating user texts in different languages. The instance of this class will
@@ -19,21 +20,14 @@ public class I18nProvider extends AbstractPropertiesReader {
      */
     public static final I18nProvider INSTANCE = new I18nProvider();
 
-    private Properties main;
-    private Properties backup;
+    private ResourceBundle messages;
+    
 
     /**
      * Sole constructor for this class, will load user texts in the correct language.
      */
     private I18nProvider() {
-        String country = Locale.getDefault().getCountry();
-        if (Locale.GERMANY.getCountry().equals(country)) {
-            main = loadProperties("i18n_de.properties");
-            backup = loadProperties("i18n_en.properties");
-        } else {
-            main = loadProperties("i18n_en.properties");
-            backup = loadProperties("i18n_de.properties");
-        }
+        messages = ResourceBundle.getBundle("de.uni_hildesheim.sse.submitter.i18n.messages");
     }
 
     /**
@@ -43,11 +37,16 @@ public class I18nProvider extends AbstractPropertiesReader {
      * @return The user text or an empty string if the key wasn't found.
      */
     public static String getText(String key) {
-        String result = INSTANCE.main.getProperty(key);
-        if (null == result) {
-            result = INSTANCE.backup.getProperty(key, "");
+        String result;
+        try {
+            result = INSTANCE.messages.getString(key);
+        } catch (MissingResourceException e) {
+            if (Starter.DEBUG) {
+                e.printStackTrace();
+            }
+            result = null;
         }
-
+        
         return result;
     }
     
@@ -61,12 +60,13 @@ public class I18nProvider extends AbstractPropertiesReader {
      * @return The user text or an empty string if the key wasn't found.
      */
     public static String getText(String key, Object... args) {
-        String text = getText(key);
+        String formatString = getText(key);
         
-        if (null != args && args.length > 0 && null != text && !text.isBlank()) {
-            text = String.format(text, args);
+        String result = formatString;
+        if (null != args && null != formatString) {
+            result = String.format(formatString, args);
         }
         
-        return text;
+        return result;
     }
 }
