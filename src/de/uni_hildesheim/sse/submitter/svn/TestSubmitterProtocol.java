@@ -1,4 +1,4 @@
-package de.uni_hildesheim.sse.submitter;
+package de.uni_hildesheim.sse.submitter.svn;
 
 import java.util.Arrays;
 import java.util.List;

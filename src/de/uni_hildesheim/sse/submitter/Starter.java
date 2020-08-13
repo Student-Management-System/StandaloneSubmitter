@@ -9,6 +9,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import org.apache.logging.log4j.LogManager;
 
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
+import de.uni_hildesheim.sse.submitter.svn.TestSubmitterProtocol;
 import de.uni_hildesheim.sse.submitter.ui.Window;
 
 /**
@@ -25,7 +26,7 @@ public class Starter {
     
     /**
      * Disable management submission. Will emulate a submission for Testblatt01Aufgabe01/JP001.
-     * See TestSubmitterProtocol in test sources.
+     * See {@link TestSubmitterProtocol}.
      */
     public static final boolean DEBUG_NO_MGMT_SYTEM = true;
     

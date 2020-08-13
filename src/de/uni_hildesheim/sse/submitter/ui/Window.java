@@ -22,7 +22,6 @@ import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.Starter;
-import de.uni_hildesheim.sse.submitter.TestSubmitterProtocol;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolConfiguration;
@@ -32,6 +31,7 @@ import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
 import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
 import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
+import de.uni_hildesheim.sse.submitter.svn.TestSubmitterProtocol;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
