@@ -21,7 +21,7 @@
             <include name="commons-io-2.4.jar"/>
             <include name="antlr-runtime-3.4.jar"/>
             <include name="lz4-java-1.4.1.jar"/>
-        	  <include name="submitter-protocol-${protocol.version}-jar-with-all-dependencies.jar"/>
+        	<include name="submitter-protocol-${protocol.version}-jar-with-dependencies.jar"/>
         </fileset>
     </path>
 	
@@ -91,6 +91,7 @@
     	<copy todir="${bin}">
             <fileset dir="${src}">
                 <include name="**/*.properties"/>
+                <include name="**/*.json"/>
             </fileset>
     		<fileset dir="${res.internal}">
     			<include name="**/*"/>
@@ -166,7 +167,7 @@
             excludes="${ant.project.name}.jar **/*.html META_INF/** **/package-info.class">
     		<manifest>
     		    <attribute name="Main-Class" value="de.uni_hildesheim.sse.submitter.Starter"/>
-    		    <attribute name="Class-Path" value=". lib/svnkit-1.10.1.jar lib/sqljet-1.1.12.jar lib/sequence-library-1.0.4.jar lib/commons-io-2.4.jar lib/antlr-runtime-3.4.jar lib/lz4-java-1.4.1.jar lib/submitter-protocol-${protocol.version}-jar-with-all-dependencies.jar"/>
+    		    <attribute name="Class-Path" value=". lib/svnkit-1.10.1.jar lib/sqljet-1.1.12.jar lib/sequence-library-1.0.4.jar lib/commons-io-2.4.jar lib/antlr-runtime-3.4.jar lib/lz4-java-1.4.1.jar lib/submitter-protocol-${protocol.version}-jar-with-dependencies.jar"/>
     		</manifest>
         </jar>
     </target>
@@ -190,9 +191,9 @@
 	            <include name="sqljet-1.1.12.jar"/>
 	            <include name="sequence-library-1.0.4.jar"/>
 	            <include name="commons-io-2.4.jar"/>
-	        	  <include name="antlr-runtime-3.4.jar"/>
-              <include name="lz4-java-1.4.1.jar"/>
-	        	  <include name="submitter-protocol-${protocol.version}-jar-with-all-dependencies.jar" />
+	        	<include name="antlr-runtime-3.4.jar"/>
+                <include name="lz4-java-1.4.1.jar"/>
+	        	<include name="submitter-protocol-${protocol.version}-jar-with-dependencies.jar" />
 			</fileset>
 		</copy>
 	</target>

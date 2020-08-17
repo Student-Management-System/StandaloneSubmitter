@@ -1,1 +1,0 @@
-START /MIN CMD.EXE /C java -jar ExerciseSubmitter.jar
