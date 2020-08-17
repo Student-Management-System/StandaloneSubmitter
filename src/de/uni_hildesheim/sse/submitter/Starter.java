@@ -28,7 +28,7 @@ public class Starter {
      * Disable management submission. Will emulate a submission for Testblatt01Aufgabe01/JP001.
      * See {@link TestSubmitterProtocol}.
      */
-    public static final boolean DEBUG_NO_MGMT_SYTEM = true;
+    public static final boolean DEBUG_NO_MGMT_SYTEM = false;
     
     /**
      * Disable SVN repository submission. Will emulate a hook response with a POST-commit failure with a variety of
