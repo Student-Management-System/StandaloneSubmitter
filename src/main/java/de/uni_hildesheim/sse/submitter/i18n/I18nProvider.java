@@ -1,5 +1,6 @@
 package de.uni_hildesheim.sse.submitter.i18n;
 
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -27,9 +28,16 @@ public class I18nProvider extends AbstractPropertiesReader {
      * Sole constructor for this class, will load user texts in the correct language.
      */
     private I18nProvider() {
-        messages = ResourceBundle.getBundle("de.uni_hildesheim.sse.submitter.i18n.messages");
+        init();
     }
 
+    /**
+     * Initializes the translation messages. This may be called explicitly after the {@link Locale} has been changed.
+     */
+    public void init() {
+        messages = ResourceBundle.getBundle("de.uni_hildesheim.sse.submitter.i18n.messages");
+    }
+    
     /**
      * Returns a user text for the given key.
      * 
@@ -55,15 +63,14 @@ public class I18nProvider extends AbstractPropertiesReader {
      * @param key The name of the user text inside the properties file.
      * @param args Arguments referenced by the format specifiers in the format
      *         string.  If there are more arguments than format specifiers, the
-     *         extra arguments are ignored.  The number of arguments is
-     *         variable and may be zero or <code>null</code>.
+     *         extra arguments are ignored.
      * @return The user text or an empty string if the key wasn't found.
      */
     public static String getText(String key, Object... args) {
         String formatString = getText(key);
         
         String result = formatString;
-        if (null != args && null != formatString) {
+        if (null != formatString) {
             result = String.format(formatString, args);
         }
         
