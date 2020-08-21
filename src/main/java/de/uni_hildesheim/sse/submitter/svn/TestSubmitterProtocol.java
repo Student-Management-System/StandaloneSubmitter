@@ -21,10 +21,10 @@ public class TestSubmitterProtocol extends SubmitterProtocol {
     /**
      * Creates this non-communicating submitter protocol.
      * 
-     * @param authenticationURL Ignored.
-     * @param stdMgmtURL Ignored.
-     * @param courseName Ignored.
-     * @param submissionServer Ignored.
+     * @param authenticationURL Passed to super.
+     * @param stdMgmtURL Passed to super.
+     * @param courseName Passed to super.
+     * @param submissionServer Passed to super.
      */
     public TestSubmitterProtocol(String authenticationURL, String stdMgmtURL, String courseName,
             String submissionServer) {
