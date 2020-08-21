@@ -1,5 +1,6 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -80,12 +81,17 @@ public class SubmitterIT {
         assertFileNotInRepository(svnFolder, "Homework04/JP001/Main.java");
         
         Submitter submitter = new Submitter(config, protocol);
-        submitter.submitFolder(submissionFolder);
+        SubmitResult result = submitter.submitFolder(submissionFolder);
         submitter.close();
         
-        assertFileInRepository(svnFolder, "Homework04/JP001/Main.java", fileContent);
-        assertFileInRepository(svnFolder, "Homework04/JP001/.classpath", null);
-        assertFileInRepository(svnFolder, "Homework04/JP001/.project", null);
+        assertAll(
+                () -> assertEquals(1, result.getNumJavFiles(), "number of submitted Java files should be correct"),
+                () -> assertEquals(2, result.getCommitInfo().getNewRevision(), "revision should be correct"),
+                () -> assertNull(result.getCommitInfo().getErrorMessage(), "no error messages expected"),
+                () -> assertFileInRepository(svnFolder, "Homework04/JP001/Main.java", fileContent),
+                () -> assertFileInRepository(svnFolder, "Homework04/JP001/.classpath", null),
+                () -> assertFileInRepository(svnFolder, "Homework04/JP001/.project", null)
+        );
     }
     
     private void setupSvnRepoForSubmission(File svnFolder, String exercise, String group) throws SVNException {
