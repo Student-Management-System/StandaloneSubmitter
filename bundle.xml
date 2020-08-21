@@ -23,7 +23,7 @@
 			<outputDirectory></outputDirectory>
 		</file>
 		<file>
-			<source>${project.basedir}/resources/Anleitung.pdf</source>
+			<source>${project.basedir}/doc/Anleitung.pdf</source>
 			<outputDirectory></outputDirectory>
 		</file>
 	</files>
