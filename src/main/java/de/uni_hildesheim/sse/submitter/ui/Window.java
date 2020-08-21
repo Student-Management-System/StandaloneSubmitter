@@ -386,10 +386,10 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         logArea.append(message);
         logArea.append("\n");
         for (ErrorDescription description : descriptions) {
-            if (null != description.getType()) {
+            if (null != description.getTool()) {
                 
-                logArea.append(I18nProvider.getText("gui.tool." + description.getType().getToolName()) + " ",
-                        colors().getColor(description.getType()), true);
+                logArea.append(I18nProvider.getText("gui.tool." + description.getTool().getToolName()) + " ",
+                        colors().getColor(description.getTool()), true);
                 
             }
             if (null != description.getSeverity()) {
@@ -412,16 +412,12 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             } else {
                 logArea.append(I18nProvider.getText("gui.log.unspecified_files") + " ");
             }
-            if (null != description.getLines() && !description.getLines().isEmpty()) {
-                logArea.append(I18nProvider.getText("gui.log.line") + " " + description.getLines() + ":");
+            if (description.getLine() > 0) {
+                logArea.append(I18nProvider.getText("gui.log.line", description.getLine()) + ":");
             }
             logArea.append("\n");
-            if (null != description.getCode()) {
-                logArea.append(" -> " + I18nProvider.getText("gui.log.error") + ": " + description.getCode());
-                logArea.append("\n");
-            }
-            if (null != description.getSolution()) {
-                logArea.append(" -> " + I18nProvider.getText("gui.log.cause") + ": " + description.getSolution());
+            if (null != description.getMessage()) {
+                logArea.append(" -> " + I18nProvider.getText("gui.log.cause") + ": " + description.getMessage());
                 logArea.append("\n");
             }
         }

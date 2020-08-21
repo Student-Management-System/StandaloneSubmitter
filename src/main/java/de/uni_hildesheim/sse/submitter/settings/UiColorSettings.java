@@ -1,6 +1,6 @@
 package de.uni_hildesheim.sse.submitter.settings;
 
-import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorType;
+import de.uni_hildesheim.sse.submitter.svn.hookErrors.Tool;
 
 /**
  * Configures the UI (i.e., color).
@@ -79,15 +79,15 @@ public class UiColorSettings {
     }
     
     /**
-     * Gets a color string for a given {@link ErrorType}.
+     * Gets a color string for a given {@link Tool}.
      *  
-     * @param type The type of error to get an appropriate color for.
+     * @param tool The type of error to get an appropriate color for.
      * 
      * @return The color string.
      */
-    public String getColor(ErrorType type) {
+    public String getColor(Tool tool) {
         String color;
-        switch (type) {
+        switch (tool) {
         case JAVAC:
             color = getJavacColor();
             break;

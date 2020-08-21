@@ -1,12 +1,12 @@
 package de.uni_hildesheim.sse.submitter.svn.hookErrors;
 
 /**
- * The different tools/checker of the hook script, which may return errors.
+ * The different checks run by the hook, which may return errors.
  * 
  * @author El-Sharkawy
  * @author Adam
  */
-public enum ErrorType {
+public enum Tool {
     FILE_SIZE("file-size"),
     ENCODING("encoding"),
     ECLIPSE_CONFIG("eclipse-configuration"),
@@ -18,6 +18,11 @@ public enum ErrorType {
      */
     HOOK("hook"),
     
+    /**
+     * An error from a tool that is not known to this tool.
+     */
+    UNKNOWN("unknown"),
+    
     // from old jSvnSubmitHook
     JUNIT("junit"),
     COMMIT("commit-handler");
@@ -28,7 +33,7 @@ public enum ErrorType {
      * Internal constructor.
      * @param toolName The name of the tool, needed for the {@link #getByToolName(String)} method.
      */
-    private ErrorType(String toolName) {
+    private Tool(String toolName) {
         this.toolName = toolName;
     }
     
@@ -42,18 +47,20 @@ public enum ErrorType {
     }
 
     /**
-     * Returns the {@link ErrorType} specified by the tool name.
-     * @param toolName The name as it is returned by the hook script.
-     * @return The {@link ErrorType} or <code>null</code> if no literal was found with the specified name.
+     * Returns the {@link Tool} specified by the tool name.
+     * 
+     * @param toolName The name as it is returned by the hook script. May be <code>null</code>.
+     * 
+     * @return The {@link Tool} or <code>null</code> if no literal was found with the specified name.
      */
-    public static ErrorType getByToolName(String toolName) {
+    public static Tool getByToolName(String toolName) {
         // the old jSvnSubmitHook had a different name for the file-size check
         if ("file-size-check".equals(toolName)) {
             toolName = "file-size";
         }
         
-        ErrorType result = null;
-        for (ErrorType type : values()) {
+        Tool result = null;
+        for (Tool type : values()) {
             if (type.toolName.equalsIgnoreCase(toolName)) {
                 result = type;
                 break;

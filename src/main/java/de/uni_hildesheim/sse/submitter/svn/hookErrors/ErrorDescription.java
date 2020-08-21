@@ -1,5 +1,7 @@
 package de.uni_hildesheim.sse.submitter.svn.hookErrors;
 
+import java.util.Objects;
+
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 
@@ -11,34 +13,34 @@ import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
  */
 public class ErrorDescription {
 
-    private ErrorType type;
-    private SeverityType severity;
+    private Tool tool;
+    private Severity severity;
+    private String message;
+    
     private String file;
-    private String lines;
-    private String code;
-    private String solution;
+    private int line = -1;
     
     /**
      * Getter for the tool information, which produced the error message.
      * @return the type
      */
-    public ErrorType getType() {
-        return type;
+    public Tool getTool() {
+        return tool;
     }
 
     /**
      * Setter for the tool information, which produced the error message.
-     * @param type the type to set
+     * @param tool the type to set
      */
-    public void setType(ErrorType type) {
-        this.type = type;
+    public void setTool(Tool tool) {
+        this.tool = tool;
     }
 
     /**
      * Getter for the severity of the returned problem message.
      * @return the severity
      */
-    public SeverityType getSeverity() {
+    public Severity getSeverity() {
         return severity;
     }
 
@@ -46,7 +48,7 @@ public class ErrorDescription {
      * Setter for the severity of the returned problem message.
      * @param severity the severity to set
      */
-    public void setSeverity(SeverityType severity) {
+    public void setSeverity(Severity severity) {
         this.severity = severity;
     }
 
@@ -67,56 +69,80 @@ public class ErrorDescription {
     }
 
     /**
-     * Getter for the lines of the problem inside the file.
-     * @return the lines
+     * Getter for the line of the problem inside the file. Anything lower or equal to 0 means there is no specific
+     * line that this error belongs to.
+     * 
+     * @return the line
      */
-    public String getLines() {
-        return lines;
+    public int getLine() {
+        return line;
     }
 
     /**
-     * Setter for the lines of the problem inside the file.
-     * @param lines the lines to set
+     * Setter for the line of the problem inside the file.
+     * @param line the line to set
      */
-    public void setLines(String lines) {
-        this.lines = lines;
+    public void setLine(int line) {
+        this.line = line;
     }
 
-    /**
-     * Getter for the code snippet, which produced the error.
-     * @return the code
-     */
-    public String getCode() {
-        return code;
-    }
 
     /**
-     * Setter for the code snippet, which produced the error.
-     * @param code the code to set
+     * Setter for the message describing this error.
+     * 
+     * @param message The "message" attribute of the hook error message.
      */
-    public void setCode(String code) {
-        this.code = code;
-    }
-    
-    /**
-     * Setter for the Solution message.
-     * @param solution The "message" attribute of the hook error message.
-     */
-    public void setSolution(String solution) {
-        String translationKey = ToolSettings.getConfig().getMessageTranslations().get(solution);
+    public void setMessage(String message) {
+        String translationKey = ToolSettings.getConfig().getMessageTranslations().get(message);
         if (translationKey != null) {
-            this.solution = I18nProvider.getText(translationKey);
+            this.message = I18nProvider.getText(translationKey);
         } else {
-            this.solution = solution;
+            this.message = message;
         }
     }
 
     /**
-     * Getter for the solution of the HOOK error message.
-     * @return The solution of the HOOK error message.
+     * Getter for the description of this error. May be localized.
+     * @return The error message.
      */
-    public String getSolution() {
-        return solution;
+    public String getMessage() {
+        return message;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(file, line, severity, message, tool);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ErrorDescription)) {
+            return false;
+        }
+        ErrorDescription other = (ErrorDescription) obj;
+        return Objects.equals(file, other.file)
+                && Objects.equals(line, other.line) && severity == other.severity
+                && Objects.equals(message, other.message) && tool == other.tool;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ErrorDescription [tool=");
+        builder.append(tool);
+        builder.append(", severity=");
+        builder.append(severity);
+        builder.append(", file=");
+        builder.append(file);
+        builder.append(", line=");
+        builder.append(line);
+        builder.append(", message=");
+        builder.append(message);
+        builder.append("]");
+        return builder.toString();
     }
 
 }

@@ -10,6 +10,7 @@ import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
+import de.uni_hildesheim.sse.submitter.svn.hookErrors.InvalidErrorMessagesException;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 
@@ -119,14 +120,20 @@ public class SubmissionResultHandler {
                 handler.showInfoMessage(I18nProvider.getText("submission.result.success"));
             }
         } else {
-            ErrorParser parser = new ErrorParser(errorsToString(errorMsg));
-            String message;
-            if (errorMsg.getErrorCode().equals(SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED)) {
-                message = I18nProvider.getText("submission.error.errors_found");
-            } else {
-                message = I18nProvider.getText("submission.error.project_not_accepted");
+            try {
+                ErrorParser parser = new ErrorParser();
+                parser.parse(errorsToString(errorMsg));
+                String message;
+                if (errorMsg.getErrorCode().equals(SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED)) {
+                    message = I18nProvider.getText("submission.error.errors_found");
+                } else {
+                    message = I18nProvider.getText("submission.error.project_not_accepted");
+                }
+                handler.showInfoMessage(message, parser.getErrors());
+                
+            } catch (InvalidErrorMessagesException e) {
+                handler.showErrorMessage(I18nProvider.getText("gui.error.unexpected_error"));
             }
-            handler.showInfoMessage(message, parser.getErrors());
         }
     }
 

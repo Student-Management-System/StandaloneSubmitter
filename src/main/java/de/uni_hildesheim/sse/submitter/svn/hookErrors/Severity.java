@@ -1,26 +1,29 @@
 package de.uni_hildesheim.sse.submitter.svn.hookErrors;
 
 /**
- * Severity type specifing whether a problem is an error or only a warning.
+ * Severity type specifying whether a problem is an error or only a warning.
+ * 
  * @author El-Sharkawy
- *
  */
-public enum SeverityType {
+public enum Severity {
+    
     WARNING, ERROR, UNKNOWN;
 
     /**
      * Returns the specified literal, with the given name.
+     * 
      * @param name The name of the literal (case insensitive).
-     * @return The specified literal or <code>null</code> if no literal matches the given name.
+     * @return The specified literal or {@link #UNKNOWN} for invalid names.
      */
-    public static SeverityType getByName(String name) {
+    public static Severity getByName(String name) {
         name = name.toUpperCase();
-        SeverityType result;
+        Severity result;
         try {
             result = valueOf(name);
         } catch (IllegalArgumentException e) {
-            result = SeverityType.UNKNOWN;
+            result = Severity.UNKNOWN;
         }
         return result;
     }
+    
 }
