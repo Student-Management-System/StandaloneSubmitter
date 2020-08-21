@@ -1,0 +1,37 @@
+{
+  "programName": "Exercise Submitter",
+  "programVersion": "2.0.0",
+  "repositoryURL": "http://147.172.178.138/javaI/abgabe/",
+  "repositorySendsXmlAnswers": true,
+  "repositoryConnectionError": "Server or server communication error. Please contact the supervisors.",
+  "mgmtURL": "http://147.172.178.30:8080/stmgmt",
+  "authURL": "http://147.172.178.30:8080",
+  "course" : {
+    "course" : "java",
+    "semester": "wise1920",
+    "teamName": "JAVA I Team",
+    "teamMail": "programmierung1@uni-hildesheim.de"
+  },
+
+  "messageCommitFailed": "Commit failed (details follow):",
+  "messageCommitRejected": "Commit blocked by pre-commit hook (exit code 1) with output:\n",
+  "messageTranslations": {
+    "No Java files found": "errors.messages.no_java_submitted",
+    "An internal error occurred": "errors.messages.unknownError",
+    "An internal error occurred while checking file encoding": "errors.messages.unknownError",
+    "An internal error occurred while checking eclipse project": "errors.messages.unknownError",
+    "An internal error occurred while running javac": "errors.messages.unknownError",
+    "An internal error occurred while running Checkstyle": "errors.messages.unknownError"
+  },
+
+  "colorSettings": {
+    "defaultColor": "#000000",
+    "javacColor": "#8A008A",
+    "checkstyleColor": "#FF1493",
+    "junitColor": "#000080",
+    "commitColor": "#7FFF00",
+    "errorColor": "#E60000",
+    "warningColor": "#FFD119",
+    "hookColor": "#7A007A"
+  }
+}
