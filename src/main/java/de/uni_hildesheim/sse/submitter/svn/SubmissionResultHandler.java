@@ -147,7 +147,7 @@ public class SubmissionResultHandler {
      * @return The extracted XML text.
      */
     private String errorsToString(SVNErrorMessage errorMsg) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         if (errorMsg.getErrorCode().equals(SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED)) {
             String errorMessage = errorMsg.getFullMessage();
             int pos = errorMessage.indexOf('\n');
