@@ -6,6 +6,7 @@ import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 
+import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
@@ -132,6 +133,9 @@ public class SubmissionResultHandler {
                 handler.showInfoMessage(message, parser.getErrors());
                 
             } catch (InvalidErrorMessagesException e) {
+                if (Starter.DEBUG) {
+                    e.printStackTrace();
+                }
                 handler.showErrorMessage(I18nProvider.getText("gui.error.unexpected_error"));
             }
         }
@@ -148,7 +152,7 @@ public class SubmissionResultHandler {
             String errorMessage = errorMsg.getFullMessage();
             int pos = errorMessage.indexOf('\n');
             if (pos > 0) {
-                errorMessage.substring(pos);
+                errorMessage = errorMessage.substring(pos);
             }
             result.append(errorMessage);
         } else {
