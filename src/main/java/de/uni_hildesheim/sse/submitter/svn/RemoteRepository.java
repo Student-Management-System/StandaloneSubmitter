@@ -17,7 +17,7 @@ import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 
-import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
+import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
@@ -202,15 +202,15 @@ public class RemoteRepository implements Closeable {
     
     /**
      * Recursively copy contents of the source folder to the destination.
-     * Ignores CLASSPATH_FILE_NAME and PROJECT_FILE_NAME from {@link FolderInitilizer} and .settings.
+     * Ignores CLASSPATH_FILE_NAME and PROJECT_FILE_NAME from {@link FolderInitializer} and .settings.
      * @param src the source directory
      * @param dst the destination directory
      * @throws IOException when copying fails
      */
     private static void recursiveCopy(File src, File dst) throws IOException {
         for (File file : src.listFiles()) {
-            if (file.getName().equals(FolderInitilizer.CLASSPATH_FILE_NAME)
-                    || file.getName().equals(FolderInitilizer.PROJECT_FILE_NAME)
+            if (file.getName().equals(FolderInitializer.CLASSPATH_FILE_NAME)
+                    || file.getName().equals(FolderInitializer.PROJECT_FILE_NAME)
                     || file.getName().equals(".settings")) {
                 continue;
             }

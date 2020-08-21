@@ -15,7 +15,7 @@ import org.apache.commons.io.filefilter.IOFileFilter;
  * @author El-Sharkawy
  * 
  */
-public class FolderInitilizer {
+public class FolderInitializer {
 
     public static final String CLASSPATH_FILE_NAME = ".classpath";
     public static final String PROJECT_FILE_NAME = ".project";
@@ -28,9 +28,9 @@ public class FolderInitilizer {
     /**
      * Sole constructor for this class.
      * @param sourceFolder The source files (which shall be committed).
-     * @param destFolder The temporary destination folder which will be used for committing files.
+     * @param destFolder The temporary destination folder which will be used for committing files. Must be a directory.
      */
-    public FolderInitilizer(File sourceFolder, File destFolder) {
+    public FolderInitializer(File sourceFolder, File destFolder) {
         this.sourceFolder = sourceFolder;
         this.destFolder = destFolder;
     }
@@ -49,11 +49,10 @@ public class FolderInitilizer {
      *             If files could not be written to the temp folder.
      */
     public void init(String projectName) throws IOException {
-        File[] oldContent = destFolder.listFiles(new SVNFilter());
-        if (null != oldContent) {
-            for (int i = 0; i < oldContent.length; i++) {
-                FileUtils.deleteQuietly(oldContent[i]);
-            }
+        File[] oldContent = destFolder.listFiles((pathname)
+            -> !(pathname.isDirectory() && pathname.getName().equalsIgnoreCase(".svn")));
+        for (int i = 0; i < oldContent.length; i++) {
+            FileUtils.deleteQuietly(oldContent[i]);
         }
         
         FileUtils.copyDirectory(sourceFolder, destFolder, NO_SVN_FILES_FILTER);
@@ -63,8 +62,8 @@ public class FolderInitilizer {
     /**
      * Created eclipse project settings, which are needed by the SVNSubmitHooks.
      * <ul>
-     * <li>Creates the classpath file (where to find java source files, libraries, ...)</li>
-     * <li>Creates the project (name of the project and natures/builders, ...)</li>
+     * <li>Creates the .classpath file (where to find java source files, libraries, ...)</li>
+     * <li>Creates the .project (name of the project and natures/builders, ...)</li>
      * </ul>
      * 
      * @param projectName
@@ -76,14 +75,16 @@ public class FolderInitilizer {
         // Create classpath settings
         File cpFile = new File(destFolder, CLASSPATH_FILE_NAME);
         if (!cpFile.exists()) {
-            InputStream input = getClass().getResourceAsStream("/" + CLASSPATH_FILE_NAME);
+            InputStream input = getClass().getResourceAsStream(
+                    "/de/uni_hildesheim/sse/submitter/io/" + CLASSPATH_FILE_NAME);
             FileUtils.copyInputStreamToFile(input, cpFile);
         }
 
         // Create Eclipse project settings
         File projectFile = new File(destFolder, PROJECT_FILE_NAME);
         if (!projectFile.exists()) {
-            InputStream input = getClass().getResourceAsStream("/" + PROJECT_FILE_NAME);
+            InputStream input = getClass().getResourceAsStream(
+                    "/de/uni_hildesheim/sse/submitter/io/" + PROJECT_FILE_NAME);
             String projectContents = IOUtils.toString(input);
             projectContents = projectContents.replaceAll("\\$projectName", projectName);
             FileUtils.write(projectFile, projectContents);

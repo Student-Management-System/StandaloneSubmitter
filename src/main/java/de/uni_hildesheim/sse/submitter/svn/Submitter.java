@@ -24,7 +24,7 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.io.FolderInitilizer;
+import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
@@ -192,7 +192,7 @@ public class Submitter implements AutoCloseable {
      * @throws SubmitException If an error occurred before the the server could run the hook script.
      */
     private int prepareCommit(File sourceFolder) throws SubmitException {
-        FolderInitilizer initilizer = new FolderInitilizer(sourceFolder, tempFolder);
+        FolderInitializer initilizer = new FolderInitializer(sourceFolder, tempFolder);
         try {
             initilizer.init(config.getExercise().getName());
             return FileUtils.listFiles(sourceFolder, new String[] {"java"}, true).size();
