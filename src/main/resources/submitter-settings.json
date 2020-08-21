@@ -1,7 +1,7 @@
 {
   "programName": "Exercise Submitter",
   "programVersion": "2.0.0",
-  "repositoryURL": "http://147.172.178.138/javaI/abgabe/",
+  "repositoryURL": "https://praktikum.sse.uni-hildesheim.de/abgaben/abgabe/",
   "repositorySendsXmlAnswers": true,
   "repositoryConnectionError": "Server or server communication error. Please contact the supervisors.",
   "mgmtURL": "http://147.172.178.30:8080/stmgmt",
