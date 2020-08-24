@@ -42,6 +42,7 @@ public class RemoteRepository implements Closeable {
     private SubmissionConfiguration config;
     private String target;
     private SVNRepository repository;
+    private SVNClientManager clientManager;
     private SubmitterProtocol protocol;
     
     /**
@@ -64,6 +65,10 @@ public class RemoteRepository implements Closeable {
             throw new ServerNotFoundException(target);
         }
         repository.setAuthenticationManager(
+            new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW().toCharArray(), null, null)
+        );
+        
+        clientManager = SVNClientManager.newInstance(null,
             new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW().toCharArray(), null, null)
         );
     }
@@ -134,7 +139,7 @@ public class RemoteRepository implements Closeable {
         
         File tmpDir = Files.createTempDirectory("abgabe").toFile();
         try {
-            SVNClientManager.newInstance().getUpdateClient().doCheckout(repository.getLocation(), tmpDir,
+            clientManager.getUpdateClient().doCheckout(repository.getLocation(), tmpDir,
                     SVNRevision.create(revision), SVNRevision.create(revision), SVNDepth.INFINITY, true);
             tmpDir = new File(tmpDir, config.getExercise().getName());
             String subFolderName = tmpDir.listFiles()[0].getName();
