@@ -12,12 +12,13 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -46,16 +47,13 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  */
 class LoginDialog extends JDialog implements ActionListener {
 
-    /**
-     * serialVersionUID.
-     */
     private static final long serialVersionUID = 365531812487797101L;
     
     private SubmissionConfiguration config;
     
     private RemoteRepository repository;
     private SubmitterProtocol protocol;
-    private Window parent;
+    private JFrame parent;
     
     /*
      * GUI components
@@ -69,34 +67,27 @@ class LoginDialog extends JDialog implements ActionListener {
     /**
      * Creates this dialog for the given parent.
      * 
-     * @param parent the parent window.
+     * @param parent The parent window, may be <code>null</code>.
+     * @param config The submission configuration.
+     * @param protocol The network connection to the management system.
      */
-    LoginDialog(Window parent) {
-        this.config = parent.getConfiguration();
-        this.protocol = parent.getNetworkProtocol();
+    LoginDialog(JFrame parent, SubmissionConfiguration config, SubmitterProtocol protocol) {
         this.parent = parent;
+        this.config = config;
+        this.protocol = protocol;
         
         // Initialize components
         initUserComponents();
         createLayout();
         
-        addWindowListener(new WindowListener() {
+        addWindowListener(new WindowAdapter() {
             @Override
-            public void windowOpened(WindowEvent arg0) {}
-            @Override
-            public void windowIconified(WindowEvent arg0) {}
-            @Override
-            public void windowDeiconified(WindowEvent arg0) {}
-            @Override
-            public void windowDeactivated(WindowEvent arg0) {}
-            @Override
-            public void windowClosing(WindowEvent arg0) {
-                System.exit(0);
+            public void windowClosing(WindowEvent event) {
+                if (parent != null) {
+                    parent.dispose();
+                }
+                dispose();
             }
-            @Override
-            public void windowClosed(WindowEvent arg0) {}
-            @Override
-            public void windowActivated(WindowEvent arg0) {}
         });
         
         setTitle("Login");
@@ -104,7 +95,6 @@ class LoginDialog extends JDialog implements ActionListener {
         setResizable(false);
         setModal(true);
         setLocationRelativeTo(parent);
-        setVisible(true);
     }
 
     /**
@@ -166,12 +156,15 @@ class LoginDialog extends JDialog implements ActionListener {
      */
     private void initUserComponents() {
         loginButton = new JButton(I18nProvider.getText("gui.elements.login"));
+        loginButton.setName("loginButton");
         loginButton.addActionListener(this);
         
         nameField = new JTextField(config.getUser(), 10);
+        nameField.setName("nameField");
         nameField.addActionListener(this);
         
         passwordField = new JPasswordField(config.getPW(), 10);
+        passwordField.setName("passwordField");
         passwordField.addActionListener(this);
         passwordField.addKeyListener(new KeyAdapter() {
             
@@ -194,6 +187,7 @@ class LoginDialog extends JDialog implements ActionListener {
         });
         
         errorMessageLabel = new JTextArea();
+        errorMessageLabel.setName("errorMessageLabel");
         errorMessageLabel.setWrapStyleWord(true);
         errorMessageLabel.setLineWrap(true);
         errorMessageLabel.setEditable(false);

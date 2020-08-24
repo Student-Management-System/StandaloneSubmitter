@@ -102,7 +102,8 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         
         config = SubmissionConfiguration.load();
         translator = new SubmissionResultHandler(this);
-        LoginDialog dialog = new LoginDialog(this);
+        LoginDialog dialog = new LoginDialog(this, config, protocol);
+        dialog.setVisible(true);
         repository = dialog.getRepository();
         try {
             setAssignmentMenu(protocol.getOpenAssignments());
