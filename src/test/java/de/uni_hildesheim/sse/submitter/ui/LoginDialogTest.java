@@ -15,6 +15,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
@@ -23,6 +24,7 @@ import net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException;
 import net.ssehub.exercisesubmitter.protocol.backend.UnknownCredentialsException;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
+@DisabledIf("java.awt.GraphicsEnvironment#isHeadless")
 public class LoginDialogTest {
 
     private static final File TEST_SVN_REPO = new File("src/test/resources/svnRepo");
