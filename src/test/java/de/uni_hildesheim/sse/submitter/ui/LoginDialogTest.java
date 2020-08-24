@@ -177,7 +177,7 @@ public class LoginDialogTest {
     private class TestConfiguration extends SubmissionConfiguration {
 
         public TestConfiguration() {
-            super("preset User value", "preset PW", null);
+            super("preset User value", "preset PW".toCharArray(), null);
         }
         
     }

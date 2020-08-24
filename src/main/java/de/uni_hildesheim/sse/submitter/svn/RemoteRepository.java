@@ -65,11 +65,11 @@ public class RemoteRepository implements Closeable {
             throw new ServerNotFoundException(target);
         }
         repository.setAuthenticationManager(
-            new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW().toCharArray(), null, null)
+            new DefaultSVNAuthenticationManager(null, false, config.getUser(), config.getPW(), null, null)
         );
         
         clientManager = SVNClientManager.newInstance(null,
-            new DefaultSVNAuthenticationManager(null, true, config.getUser(), config.getPW().toCharArray(), null, null)
+            new DefaultSVNAuthenticationManager(null, false, config.getUser(), config.getPW(), null, null)
         );
     }
     

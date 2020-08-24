@@ -17,6 +17,7 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.wc.DefaultSVNCommitParameters;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNCommitClient;
@@ -55,7 +56,8 @@ public class Submitter implements AutoCloseable {
         this.config = config;
         this.protocol = protocol;
         url = composeTarget(config);
-        clientManager = SVNClientManager.newInstance(null, config.getUser(), config.getPW());
+        clientManager = SVNClientManager.newInstance(null,
+                new DefaultSVNAuthenticationManager(null, false, config.getUser(), config.getPW(), null, null));
         DAVRepositoryFactory.setup();
         SVNRepositoryFactoryImpl.setup();
         FSRepositoryFactory.setup();

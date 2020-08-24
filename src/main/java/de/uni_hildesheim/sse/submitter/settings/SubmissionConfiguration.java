@@ -24,7 +24,7 @@ public class SubmissionConfiguration {
     /*
      * Transient avoids (de-)serialization of the password: https://stackoverflow.com/a/5889590
      */
-    private transient String pw;
+    private transient char[] pw;
     private Assignment exercise;
     private String projectFolder;
 
@@ -38,7 +38,7 @@ public class SubmissionConfiguration {
      * @param exercise
      *            The exercise to upload.
      */
-    public SubmissionConfiguration(String user, String pw, Assignment exercise) {
+    public SubmissionConfiguration(String user, char[] pw, Assignment exercise) {
         this.user = user;
         this.pw = pw;
         this.exercise = exercise;
@@ -58,7 +58,7 @@ public class SubmissionConfiguration {
      * 
      * @return the pw
      */
-    public String getPW() {
+    public char[] getPW() {
         return pw;
     }
 
@@ -86,7 +86,7 @@ public class SubmissionConfiguration {
      * 
      * @param password the password
      */
-    public void setPW(String password) {
+    public void setPW(char[] password) {
         this.pw = password;
     }
     
@@ -145,7 +145,7 @@ public class SubmissionConfiguration {
         }
         
         if (null == result) {
-            result = new SubmissionConfiguration("", "", null);
+            result = new SubmissionConfiguration("", new char[0], null);
         }
         
         return result;

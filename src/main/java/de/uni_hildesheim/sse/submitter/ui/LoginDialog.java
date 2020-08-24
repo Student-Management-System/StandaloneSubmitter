@@ -162,7 +162,7 @@ class LoginDialog extends JDialog implements ActionListener {
         nameField.setName("nameField");
         nameField.addActionListener(this);
         
-        passwordField = new JPasswordField(config.getPW(), 10);
+        passwordField = new JPasswordField(10);
         passwordField.setName("passwordField");
         passwordField.addActionListener(this);
         passwordField.addKeyListener(new KeyAdapter() {
@@ -208,7 +208,7 @@ class LoginDialog extends JDialog implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent evt) {
         String user = nameField.getText();
-        String pw = new String(passwordField.getPassword());
+        char[] pw = passwordField.getPassword();
         config.setUser(user);
         config.setPW(pw);
 
@@ -221,7 +221,7 @@ class LoginDialog extends JDialog implements ActionListener {
             String errorMessage = null;
             try {
                 // First check: Check that credentials are supported by REST servers
-                boolean success = protocol.login(user, pw);
+                boolean success = protocol.login(user, new String(pw));
                 if (success) {
                     try {
                         repository = new RemoteRepository(config, protocol);

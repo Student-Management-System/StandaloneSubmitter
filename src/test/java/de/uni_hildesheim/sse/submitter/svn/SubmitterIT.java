@@ -47,7 +47,7 @@ public class SubmitterIT {
     public void repoDoesntExist() throws SubmitException, IOException {
         File svnFolder = createTemporaryDirectory();
         
-        SubmissionConfiguration config = new SubmissionConfiguration("someStudent", "123456",
+        SubmissionConfiguration config = new SubmissionConfiguration("someStudent", "123456".toCharArray(),
                 new Assignment("Homework04", "Homework04", State.SUBMISSION, true));
         
         SubmitterProtocol protocol = new TestSubmitterProtocol(null, null, null, svnFolder.toURI().toString());
@@ -63,7 +63,7 @@ public class SubmitterIT {
         File svnFolder = createTemporaryDirectory();
         setupSvnRepoForSubmission(svnFolder, "Homework04", "JP001");
         
-        SubmissionConfiguration config = new SubmissionConfiguration("someStudent", "123456",
+        SubmissionConfiguration config = new SubmissionConfiguration("someStudent", "123456".toCharArray(),
                 new Assignment("Homework04", "Homework04", State.SUBMISSION, true));
         
         SubmitterProtocol protocol = new TestSubmitterProtocol(null, null, null, "file:///" + svnFolder.getAbsolutePath());
