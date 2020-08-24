@@ -10,12 +10,15 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
@@ -131,7 +134,8 @@ public class RemoteRepository implements Closeable {
         
         File tmpDir = Files.createTempDirectory("abgabe").toFile();
         try {
-            repository.checkout(revision, null, true, new ExportEditor(tmpDir));
+            SVNClientManager.newInstance().getUpdateClient().doCheckout(repository.getLocation(), tmpDir,
+                    SVNRevision.create(revision), SVNRevision.create(revision), SVNDepth.INFINITY, true);
             tmpDir = new File(tmpDir, config.getExercise().getName());
             String subFolderName = tmpDir.listFiles()[0].getName();
             tmpDir = new File(tmpDir, subFolderName);
