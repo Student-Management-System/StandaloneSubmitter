@@ -71,7 +71,7 @@ class SubmissionThread extends Thread {
     }
     
     /**
-     * For testing purpoeses, creates mock errors and sends them to the {@link #translator}.
+     * For testing purposes, creates mock errors and sends them to the {@link #translator}.
      */
     private void createMockErrors() {
         // 
