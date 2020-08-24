@@ -1,8 +1,9 @@
 package de.uni_hildesheim.sse.submitter.ui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -20,10 +21,12 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolTip;
 import javax.swing.Popup;
 import javax.swing.PopupFactory;
+import javax.swing.UIManager;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
@@ -57,7 +60,7 @@ class LoginDialog extends JDialog implements ActionListener {
      */
     private JTextField nameField;
     private JPasswordField passwordField;
-    private JLabel errorMessageLabel;
+    private JTextArea errorMessageLabel;
     private Popup capsLockWarning;
     
     /**
@@ -72,24 +75,7 @@ class LoginDialog extends JDialog implements ActionListener {
         
         // Initialize components
         initUserComponents();
-        JButton button = new JButton(I18nProvider.getText("gui.elements.login"));
-        button.addActionListener(this);
-        
-        JPanel topPanel = new JPanel(new GridLayout(0, 2, 2, 2));
-        topPanel.add(new JLabel(I18nProvider.getText("gui.elements.name")));
-        topPanel.add(nameField);
-        topPanel.add(new JLabel(I18nProvider.getText("gui.elements.password")));
-        topPanel.add(passwordField);
-        topPanel.add(new JPanel());
-        topPanel.add(button);
-        
-        
-        JPanel contentPane = new JPanel();
-        setContentPane(contentPane);
-        contentPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        contentPane.setLayout(new BorderLayout());
-        contentPane.add(errorMessageLabel, BorderLayout.NORTH);
-        contentPane.add(topPanel, BorderLayout.CENTER);
+        createLayout();
         
         addWindowListener(new WindowListener() {
             @Override
@@ -119,12 +105,69 @@ class LoginDialog extends JDialog implements ActionListener {
     }
 
     /**
+     * Creates the layout of this dialog. Creates the content pane and adds the UI components.
+     */
+    private void createLayout() {
+        JButton button = new JButton(I18nProvider.getText("gui.elements.login"));
+        button.addActionListener(this);
+        
+        JPanel contentPane = new JPanel(new GridBagLayout());
+        GridBagConstraints constr = new GridBagConstraints();
+        constr.insets = new Insets(2, 2, 2, 2);
+        
+        constr.gridx = 0;
+        constr.gridy = 0;
+        constr.anchor = GridBagConstraints.WEST;
+        constr.fill = GridBagConstraints.NONE;
+        JLabel nameLbl = new JLabel(I18nProvider.getText("gui.elements.name"));
+        nameLbl.setLabelFor(nameField);
+        contentPane.add(nameLbl, constr);
+        
+        constr.gridx = 1;
+        constr.gridy = 0;
+        constr.anchor = GridBagConstraints.CENTER;
+        constr.fill = GridBagConstraints.HORIZONTAL;
+        contentPane.add(nameField, constr);
+        
+        constr.gridx = 0;
+        constr.gridy = 1;
+        constr.anchor = GridBagConstraints.WEST;
+        constr.fill = GridBagConstraints.NONE;
+        JLabel pwLbl = new JLabel(I18nProvider.getText("gui.elements.password"));
+        pwLbl.setLabelFor(passwordField);
+        contentPane.add(pwLbl, constr);
+        
+        constr.gridx = 1;
+        constr.gridy = 1;
+        constr.anchor = GridBagConstraints.CENTER;
+        constr.fill = GridBagConstraints.HORIZONTAL;
+        contentPane.add(passwordField, constr);
+        
+        constr.gridx = 0;
+        constr.gridy = 2;
+        constr.anchor = GridBagConstraints.CENTER;
+        constr.fill = GridBagConstraints.HORIZONTAL;
+        constr.gridwidth = 2;
+        contentPane.add(errorMessageLabel, constr);
+        constr.gridwidth = 1;
+        
+        constr.gridx = 1;
+        constr.gridy = 3;
+        constr.anchor = GridBagConstraints.EAST;
+        constr.fill = GridBagConstraints.NONE;
+        contentPane.add(button, constr);
+        
+        setContentPane(contentPane);
+        contentPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+    }
+
+    /**
      * Creates the items, which are also used outside of the constructor.
      */
     private void initUserComponents() {
-        nameField = new JTextField(config.getUser());
+        nameField = new JTextField(config.getUser(), 10);
         nameField.addActionListener(this);
-        passwordField = new JPasswordField(config.getPW());
+        passwordField = new JPasswordField(config.getPW(), 10);
         passwordField.addActionListener(this);
         passwordField.addKeyListener(new KeyAdapter() {
             
@@ -145,7 +188,14 @@ class LoginDialog extends JDialog implements ActionListener {
                 capsLockWarn();
             }
         });
-        errorMessageLabel = new JLabel();
+        errorMessageLabel = new JTextArea();
+        errorMessageLabel.setWrapStyleWord(true);
+        errorMessageLabel.setLineWrap(true);
+        errorMessageLabel.setEditable(false);
+        errorMessageLabel.setFocusable(false);
+        errorMessageLabel.setBackground(UIManager.getColor("Label.background"));
+        errorMessageLabel.setFont(UIManager.getFont("Label.font"));
+        errorMessageLabel.setBorder(UIManager.getBorder("Label.border"));
         errorMessageLabel.setForeground(Color.RED);
     }
     
