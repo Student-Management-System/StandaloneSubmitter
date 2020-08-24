@@ -26,6 +26,8 @@ import javax.swing.JTextField;
 import javax.swing.JToolTip;
 import javax.swing.Popup;
 import javax.swing.PopupFactory;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
@@ -58,6 +60,7 @@ class LoginDialog extends JDialog implements ActionListener {
     /*
      * GUI components
      */
+    private JButton loginButton;
     private JTextField nameField;
     private JPasswordField passwordField;
     private JTextArea errorMessageLabel;
@@ -108,9 +111,6 @@ class LoginDialog extends JDialog implements ActionListener {
      * Creates the layout of this dialog. Creates the content pane and adds the UI components.
      */
     private void createLayout() {
-        JButton button = new JButton(I18nProvider.getText("gui.elements.login"));
-        button.addActionListener(this);
-        
         JPanel contentPane = new JPanel(new GridBagLayout());
         GridBagConstraints constr = new GridBagConstraints();
         constr.insets = new Insets(2, 2, 2, 2);
@@ -155,7 +155,7 @@ class LoginDialog extends JDialog implements ActionListener {
         constr.gridy = 3;
         constr.anchor = GridBagConstraints.EAST;
         constr.fill = GridBagConstraints.NONE;
-        contentPane.add(button, constr);
+        contentPane.add(loginButton, constr);
         
         setContentPane(contentPane);
         contentPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -165,8 +165,12 @@ class LoginDialog extends JDialog implements ActionListener {
      * Creates the items, which are also used outside of the constructor.
      */
     private void initUserComponents() {
+        loginButton = new JButton(I18nProvider.getText("gui.elements.login"));
+        loginButton.addActionListener(this);
+        
         nameField = new JTextField(config.getUser(), 10);
         nameField.addActionListener(this);
+        
         passwordField = new JPasswordField(config.getPW(), 10);
         passwordField.addActionListener(this);
         passwordField.addKeyListener(new KeyAdapter() {
@@ -188,6 +192,7 @@ class LoginDialog extends JDialog implements ActionListener {
                 capsLockWarn();
             }
         });
+        
         errorMessageLabel = new JTextArea();
         errorMessageLabel.setWrapStyleWord(true);
         errorMessageLabel.setLineWrap(true);
@@ -207,6 +212,58 @@ class LoginDialog extends JDialog implements ActionListener {
         return repository;
     }
     
+    /**
+     * A timer that regularly updates the button text to indicate a running task.
+     * <ol>
+     *  <li>Create an instance</li>
+     *  <li>Call {@link #start()}</li>
+     *  <li>(do the task asynchronously)</li>
+     *  <li>Call {@link #stop()}</li>
+     * </ol>
+     */
+    private static class ButtonProgressAnimator extends Timer implements ActionListener {
+
+        private static final long serialVersionUID = 5163487331638112464L;
+
+        private static final char[] ANIMATION_STEPS = {'-', '\\', '/'}; 
+        
+        private static final int ANIMATION_INTERVAL_MS = 200;
+        
+        private int currentStep;
+        
+        private String originalText;
+        
+        private JButton button;
+        
+        /**
+         * Creates an updater for the given button.
+         * 
+         * @param button The button to update in regular intervals.
+         */
+        public ButtonProgressAnimator(JButton button) {
+            super(ANIMATION_INTERVAL_MS, null);
+            addActionListener(this);
+            
+            this.button = button;
+            this.originalText = button.getText();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            currentStep++;
+            currentStep %= ANIMATION_STEPS.length;
+            
+            button.setText(originalText + ' ' + ANIMATION_STEPS[currentStep]);
+        }
+        
+        @Override
+        public void stop() {
+            super.stop();
+            button.setText(originalText);
+        }
+        
+    }
+    
     @Override
     public void actionPerformed(ActionEvent evt) {
         String user = nameField.getText();
@@ -214,41 +271,54 @@ class LoginDialog extends JDialog implements ActionListener {
         config.setUser(user);
         config.setPW(pw);
 
+        loginButton.setEnabled(false);
         
-        String errorMessage = null;
-        try {
-            // First check: Check that credentials are supported by REST servers
-            boolean success = protocol.login(user, pw);
-            if (success) {
-                try {
-                    repository = new RemoteRepository(config, protocol);
-                    // Double check: Check that credentials are also accepted by the submission server
-                    success = repository.checkConnection();
-                    if (!success) {
-                        errorMessage = I18nProvider.getText("gui.error.login_wrong_repository",
-                            ToolSettings.getConfig().getCourse().getTeamName(), 
-                            ToolSettings.getConfig().getCourse().getTeamMail());                        
+        ButtonProgressAnimator animator = new ButtonProgressAnimator(loginButton);
+        animator.start();
+        
+        new Thread(() -> {
+            String errorMessage = null;
+            try {
+                // First check: Check that credentials are supported by REST servers
+                boolean success = protocol.login(user, pw);
+                if (success) {
+                    try {
+                        repository = new RemoteRepository(config, protocol);
+                        // Double check: Check that credentials are also accepted by the submission server
+                        success = repository.checkConnection();
+                        if (!success) {
+                            errorMessage = I18nProvider.getText("gui.error.login_wrong_repository",
+                                    ToolSettings.getConfig().getCourse().getTeamName(),
+                                    ToolSettings.getConfig().getCourse().getTeamMail());
+                        }
+                    } catch (ServerNotFoundException e) {
+                        errorMessage = I18nProvider.getText("gui.error.server_not_found") + " " + e.getAddress();
                     }
-                } catch (ServerNotFoundException e) {
-                    errorMessage = I18nProvider.getText("gui.error.server_not_found") + " " + e.getAddress();
+                } else {
+                    errorMessage = I18nProvider.getText("gui.error.unknown_error");
                 }
-            } else {
-                errorMessage = I18nProvider.getText("gui.error.unknown_error");
+            } catch (UnknownCredentialsException e) {
+                errorMessage = I18nProvider.getText("gui.error.unknown_credentials");
+            } catch (net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException e) {
+                errorMessage = I18nProvider.getText("gui.error.system_unreachable");
+                
+            } finally {
+                String result = errorMessage;
+                SwingUtilities.invokeLater(() -> {
+                    animator.stop();
+                    loginButton.setEnabled(true);
+                    
+                    if (result == null) {
+                        dispose();
+                    } else {
+                        errorMessageLabel.setText(result);
+                        pack();
+                        setLocationRelativeTo(parent);
+                    }
+                });
             }
-        } catch (UnknownCredentialsException e) {
-            errorMessage = I18nProvider.getText("gui.error.unknown_credentials");
-        } catch (net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException e) {
-            errorMessage = I18nProvider.getText("gui.error.system_unreachable");
-        }
-       
-        
-        if (errorMessage == null) {
-            dispose();
-        } else {
-            errorMessageLabel.setText(errorMessage);
-            pack();
-            setLocationRelativeTo(parent);
-        }
+            
+        }).start();
     }
     
     /**
