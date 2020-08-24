@@ -26,8 +26,6 @@ public class SubmissionResultHandler {
     
     private static final Logger LOGGER = LogManager.getLogger(SubmissionResultHandler.class);
     
-    private static final String COMMIT_FAILED = "Commit failed (details follow):";
-    
     private static final String BLOCKED_BY_PRE_COMMIT_PREFIX
             = "Commit blocked by pre-commit hook (exit code 1) with output:\n";
 
@@ -153,26 +151,27 @@ public class SubmissionResultHandler {
      * @return The extracted XML text.
      */
     private String errorsToString(SVNErrorMessage errorMsg) {
-        StringBuilder result = new StringBuilder();
+        String result = "";
         if (errorMsg.getErrorCode().equals(SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED)) {
-            String errorMessage = errorMsg.getFullMessage();
-            int pos = errorMessage.indexOf('\n');
+            String messageString = errorMsg.getMessageTemplate();
+            int pos = messageString.indexOf('\n');
             if (pos > 0) {
-                errorMessage = errorMessage.substring(pos);
+                messageString = messageString.substring(pos);
             }
-            result.append(errorMessage);
+            result = messageString;
+            
         } else {
-            while (errorMsg.hasChildErrorMessage()) {
-                String error = errorMsg.getMessageTemplate();
-                if (!COMMIT_FAILED.equals(error)) {
-                    error = error.substring(BLOCKED_BY_PRE_COMMIT_PREFIX.length());
-                    result.append(error);
-                    result.append("\n");
+            do {
+                String messageString = errorMsg.getMessageTemplate();
+                if (messageString != null && messageString.startsWith(BLOCKED_BY_PRE_COMMIT_PREFIX)) {
+                    messageString = messageString.substring(BLOCKED_BY_PRE_COMMIT_PREFIX.length());
+                    result = messageString;
+                    break;
                 }
                 errorMsg = errorMsg.getChildErrorMessage();
-            }
+            } while (errorMsg != null);
         }
-        return result.toString();
+        return result;
     }
 
 }
