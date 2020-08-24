@@ -22,19 +22,19 @@ public class Starter {
     /**
      * General debug mode.
      */
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = Boolean.getBoolean("submitter.debug");
     
     /**
      * Disable management submission. Will emulate a submission for Testblatt01Aufgabe01/JP001.
      * See {@link TestSubmitterProtocol}.
      */
-    public static final boolean DEBUG_NO_MGMT_SYTEM = false;
+    public static final boolean DEBUG_NO_MGMT_SYTEM = Boolean.getBoolean("submitter.debug.no_mgmt");
     
     /**
      * Disable SVN repository submission. Will emulate a hook response with a POST-commit failure with a variety of
      * different errors and warnings. See SubmissionThread.createMockErrors().
      */
-    public static final boolean DEBUG_NO_SUBMISSION = false;
+    public static final boolean DEBUG_NO_SUBMISSION = Boolean.getBoolean("submitter.debug.no_submission");
     
     /**
      * Starts the program.
