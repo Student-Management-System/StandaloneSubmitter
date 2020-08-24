@@ -13,15 +13,11 @@ public class ToolConfiguration {
     private String programVersion;
     
     private String repositoryURL;
-    private boolean repositorySendsXmlAnswers;
-    private String repositoryConnectionError;
     private String mgmtURL;
     private String authURL;
     
     private CourseSettings course;
     
-    private String messageCommitFailed;
-    private String messageCommitRejected;
     private Map<String, String> messageTranslations;
     
     private UiColorSettings colorSettings;
@@ -51,23 +47,6 @@ public class ToolConfiguration {
     }
     
     /**
-     * <code>true</code> The commit hook send answers in XML format, <code>false</code> the hook sends messages in
-     * plain text format.
-     * @return Whether the commit hook sends XML answers.
-     */
-    public boolean isRepositorySendsXmlAnswers() {
-        return repositorySendsXmlAnswers;
-    }
-    
-    /**
-     * The message if the server is not reachable.
-     * @return the repositoryConnectionError
-     */
-    public String getRepositoryConnectionError() {
-        return repositoryConnectionError;
-    }
-    
-    /**
      * Returns the location of the <b>student management system</b>.
      * @return the location of the <b>student management system</b>.
      */
@@ -81,22 +60,6 @@ public class ToolConfiguration {
      */
     public String getAuthURL() {
         return authURL;
-    }
-    
-    /**
-     * Returns the message that the commit has failed.
-     * @return The commit-failed message.
-     */
-    public String getMessageCommitFailed() {
-        return messageCommitFailed;
-    }
-    
-    /**
-     * Returns the message that the commit was rejected by the pre-commit hook.
-     * @return The commit-rejected message.
-     */
-    public String getMessageCommitRejected() {
-        return messageCommitRejected;
     }
     
     /**
@@ -140,23 +103,6 @@ public class ToolConfiguration {
     }
     
     /**
-     * <code>true</code> The commit hook send answers in XML format, <code>false</code> the hook sends messages in
-     * plain text format.
-     * @param repositorySendsXmlAnswers Specifies if the hook sends messages in XML format.
-     */
-    public void setRepositorySendsXmlAnswers(boolean repositorySendsXmlAnswers) {
-        this.repositorySendsXmlAnswers = repositorySendsXmlAnswers;
-    }
-    
-    /**
-     * The message if the server is not reachable.
-     * @param repositoryConnectionError The message if the server is not reachable.
-     */
-    public void setRepositoryConnectionError(String repositoryConnectionError) {
-        this.repositoryConnectionError = repositoryConnectionError;
-    }
-    
-    /**
      * Sets the location of the <b>student management system</b>.
      * @param mgmtURL the location of the <b>student management system</b>.
      */
@@ -170,22 +116,6 @@ public class ToolConfiguration {
      */
     public void setAuthURL(String authURL) {
         this.authURL = authURL;
-    }
-    
-    /**
-     * Sets the message that the commit failed.
-     * @param messageCommitFailed The commit-failed message.
-     */
-    public void setMessageCommitFailed(String messageCommitFailed) {
-        this.messageCommitFailed = messageCommitFailed;
-    }
-    
-    /**
-     * Sets the message that the commit was rejected by the pre-commit hook.
-     * @param messageCommitRejected The commit-rejected message.
-     */
-    public void setMessageCommitRejected(String messageCommitRejected) {
-        this.messageCommitRejected = messageCommitRejected;
     }
     
     /**

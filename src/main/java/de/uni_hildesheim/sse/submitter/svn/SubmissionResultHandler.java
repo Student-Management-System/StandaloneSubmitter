@@ -23,7 +23,13 @@ import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
  * 
  */
 public class SubmissionResultHandler {
+    
     private static final Logger LOGGER = LogManager.getLogger(SubmissionResultHandler.class);
+    
+    private static final String COMMIT_FAILED = "Commit failed (details follow):";
+    
+    private static final String BLOCKED_BY_PRE_COMMIT_PREFIX
+            = "Commit blocked by pre-commit hook (exit code 1) with output:\n";
 
     private ISubmissionOutputHandler handler;
 
@@ -158,8 +164,8 @@ public class SubmissionResultHandler {
         } else {
             while (errorMsg.hasChildErrorMessage()) {
                 String error = errorMsg.getMessageTemplate();
-                if (!ToolSettings.getConfig().getMessageCommitFailed().equals(error)) {
-                    error = error.substring(ToolSettings.getConfig().getMessageCommitRejected().length());
+                if (!COMMIT_FAILED.equals(error)) {
+                    error = error.substring(BLOCKED_BY_PRE_COMMIT_PREFIX.length());
                     result.append(error);
                     result.append("\n");
                 }

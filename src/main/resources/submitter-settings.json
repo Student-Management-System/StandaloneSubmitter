@@ -1,20 +1,17 @@
 {
   "programName": "Exercise Submitter",
   "programVersion": "2.0.0",
-  "repositoryURL": "https://praktikum.sse.uni-hildesheim.de/abgaben/abgabe/",
-  "repositorySendsXmlAnswers": true,
-  "repositoryConnectionError": "Server or server communication error. Please contact the supervisors.",
+
   "mgmtURL": "http://147.172.178.30:8080/stmgmt",
   "authURL": "http://147.172.178.30:8080",
   "course" : {
     "course" : "java",
     "semester": "wise1920",
-    "teamName": "JAVA I Team",
+    "teamName": "Java I Team",
     "teamMail": "programmierung1@uni-hildesheim.de"
   },
 
-  "messageCommitFailed": "Commit failed (details follow):",
-  "messageCommitRejected": "Commit blocked by pre-commit hook (exit code 1) with output:\n",
+  "repositoryURL": "https://praktikum.sse.uni-hildesheim.de/abgaben/abgabe/",
   "messageTranslations": {
     "No Java files found": "errors.messages.no_java_submitted",
     "An internal error occurred": "errors.messages.unknownError",
