@@ -1,8 +1,6 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * Caller of the {@link Submitter}.
@@ -10,12 +8,6 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  *
  */
 public interface ISubmissionOutputHandler {
-
-    /**
-     * Getter for the submission settings.
-     * @return The submission settings, must not be <code>null</code>.
-     */
-    public SubmissionConfiguration getConfiguration();
 
     /**
      * Shows an info message (e.g. no files has been changed, or submission was successful).
@@ -36,10 +28,4 @@ public interface ISubmissionOutputHandler {
      */
     public void showInfoMessage(String message, ErrorDescription[] descriptions);
     
-    /**
-     * Returns the network protocol to communicate with the <b>student management system</b> via it's REST interface.
-     * @return The network protocol for the REST server.
-     */
-    public SubmitterProtocol getNetworkProtocol();
-
 }

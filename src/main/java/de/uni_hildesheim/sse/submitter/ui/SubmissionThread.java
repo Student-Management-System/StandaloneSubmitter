@@ -12,11 +12,11 @@ import org.tmatesoft.svn.core.SVNErrorMessage;
 import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
-import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
 import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
 import de.uni_hildesheim.sse.submitter.svn.SubmitException;
 import de.uni_hildesheim.sse.submitter.svn.SubmitResult;
 import de.uni_hildesheim.sse.submitter.svn.Submitter;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 
 /**
  * A thread to submit a project.
@@ -27,7 +27,6 @@ class SubmissionThread extends Thread {
 
     private Window parent;
     private SubmissionConfiguration config;
-    private SubmissionResultHandler translator;
     private File projectFolder;
     
     /**
@@ -35,15 +34,12 @@ class SubmissionThread extends Thread {
      * 
      * @param parent the window that created this thread.
      * @param config the configuration object (for e.g. name and password).
-     * @param translator the translator for results.
      * @param projectFolder the folder of the project to be submitted.
      */
-    SubmissionThread(Window parent, SubmissionConfiguration config, SubmissionResultHandler translator,
-        File projectFolder) {
+    SubmissionThread(Window parent, SubmissionConfiguration config, File projectFolder) {
         
         this.parent = parent;
         this.config = config;
-        this.translator = translator;
         this.projectFolder = projectFolder;
     }
     
@@ -53,17 +49,26 @@ class SubmissionThread extends Thread {
             createMockErrors();
             
         } else {
+            SubmissionResultHandler resultHandler = new SubmissionResultHandler(parent);
+            
             try (Submitter submitter = new Submitter(config, parent.getNetworkProtocol())) {
                 SubmitResult result = submitter.submitFolder(projectFolder);
-                translator.handleCommitResult(result.getCommitInfo());
+                resultHandler.handleCommitResult(result.getCommitInfo());
                 if (result.getNumJavFiles() <= 0) {
-                    ISubmissionOutputHandler handler = translator.getHandler();
-                    handler.showErrorMessage(I18nProvider.getText("submission.error.no_java_files"));
+                    parent.showErrorMessage(I18nProvider.getText("submission.error.no_java_files"));
                 }
             } catch (IOException e) {
                 LogManager.getLogger(SubmissionThread.class).warn("Could not clean up temp folder.", e);
             } catch (SubmitException e) {
-                translator.handleCommitException(e);
+                String submissionPath = null;
+                try {
+                    submissionPath = parent.getNetworkProtocol()
+                            .getPathToSubmission(config.getExercise()).getSubmissionPath();
+                } catch (NetworkException e2) {
+                    // ignore
+                }
+                
+                resultHandler.handleCommitException(e, config.getExercise(), submissionPath);
             } finally {
                 parent.toggleButtons(true);
             }
@@ -95,7 +100,7 @@ class SubmissionThread extends Thread {
             + "</submitResults>\n"
         );
         SVNCommitInfo info = new SVNCommitInfo(4, "student1", new Date(), error);
-        translator.handleCommitResult(info);
+        new SubmissionResultHandler(parent).handleCommitResult(info);
     }
     
 }

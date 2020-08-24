@@ -17,25 +17,16 @@ import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.Severity;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.Tool;
-import net.ssehub.exercisesubmitter.protocol.backend.DataNotFoundException;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmissionTarget;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment.State;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
 
     private List<Message> createdMessages = new LinkedList<>();
-    
-    private SubmissionConfiguration configuration;
-    
-    private SubmitterProtocol protocol;
     
     @Test
     @DisplayName("success message for commit without errors")
@@ -145,7 +136,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(null, null);
         
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, null, null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.basis", 
@@ -161,7 +152,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.NO_REPOSITORY_FOUND, "some location");
         
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, null, null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.repository_not_found", "some location",
@@ -177,7 +168,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, null);
         
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, null, null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.could_not_create_temp_dir_no_location_available"))
@@ -191,7 +182,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, "some/directory");
         
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, null, null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.could_not_create_temp_dir", "some/directory"))
@@ -205,7 +196,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.CANNOT_COMMIT, "some/dir2");
         
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, null, null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.cannot_commit", "some/dir2"))
@@ -219,7 +210,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.DO_STATUS_NOT_POSSIBLE, null);
         
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, null, null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.do_status_not_possible", 
@@ -235,7 +226,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.COULD_NOT_QUERY_MANAGEMENT_SYSTEM, null);
         
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, null, null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.basis", 
@@ -246,23 +237,12 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
     
     @Test
     @DisplayName("handles SubmitException with an NO_EXERCISE_FOUND error code for a group assignment")
-    public void exceptionCouldNoExerciseFoundForGroup() {
+    public void exceptionNoExerciseFoundForGroup() {
         SubmissionResultHandler handler = new SubmissionResultHandler(this);
         
         SubmitException exception = new SubmitException(ErrorType.NO_EXERCISE_FOUND, "some/local/directory");
         
-        configuration = new SubmissionConfiguration("username", "some_group", new Assignment("Assignment_name", "Some ID", State.SUBMISSION, true));
-        
-        protocol = new SubmitterProtocol(null, null, null, "") {
-            
-            @Override
-            public SubmissionTarget getPathToSubmission(Assignment assignment) throws NetworkException {
-                return getPathToSubmission(assignment, "some submission");
-            }
-            
-        };
-        
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, true), "some submission");
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.exercise_not_found",
@@ -272,23 +252,12 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
     
     @Test
     @DisplayName("handles SubmitException with an NO_EXERCISE_FOUND error code for a non-group assignment")
-    public void exceptionCouldNoExerciseFoundForNonGroup() {
+    public void exceptionNoExerciseFoundForNonGroup() {
         SubmissionResultHandler handler = new SubmissionResultHandler(this);
         
         SubmitException exception = new SubmitException(ErrorType.NO_EXERCISE_FOUND, "some/local/directory");
         
-        configuration = new SubmissionConfiguration("username", "some_group", new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false));
-        
-        protocol = new SubmitterProtocol(null, null, null, "") {
-            
-            @Override
-            public SubmissionTarget getPathToSubmission(Assignment assignment) throws NetworkException {
-                return getPathToSubmission(assignment, "some submission");
-            }
-            
-        };
-        
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false), "some submission");
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.exercise_not_found",
@@ -297,35 +266,19 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
     }
     
     @Test
-    @DisplayName("handles SubmitException with an NO_EXERCISE_FOUND error code and a NetworkException for group name")
-    public void exceptionCouldNoExerciseFoundNetworkException() {
+    @DisplayName("handles SubmitException with an NO_EXERCISE_FOUND error code and no submission folder")
+    public void exceptionNoExerciseFoundNoSubmissionFolder() {
         SubmissionResultHandler handler = new SubmissionResultHandler(this);
         
         SubmitException exception = new SubmitException(ErrorType.NO_EXERCISE_FOUND, "some/local/directory");
         
-        configuration = new SubmissionConfiguration("username", "some_group", new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false));
-        
-        protocol = new SubmitterProtocol(null, null, null, "") {
-            
-            @Override
-            public SubmissionTarget getPathToSubmission(Assignment assignment) throws NetworkException {
-                throw new DataNotFoundException("", "", null);
-            }
-            
-        };
-        
-        handler.handleCommitException(exception);
+        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false), null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.exercise_not_found",
                         "Assignment_name", I18nProvider.getText("submission.user"), 
                         I18nProvider.getText("errors.stdmanagemt.unreachable"), "some/local/directory"))
                 ), createdMessages, "a single error message should have been created");
-    }
-
-    @Override
-    public SubmissionConfiguration getConfiguration() {
-        return configuration;
     }
 
     @Override
@@ -343,11 +296,6 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         createdMessages.add(new Message("info", message, descriptions));
     }
 
-    @Override
-    public SubmitterProtocol getNetworkProtocol() {
-        return protocol;
-    }
-    
     private static class Message {
         
         private String type;

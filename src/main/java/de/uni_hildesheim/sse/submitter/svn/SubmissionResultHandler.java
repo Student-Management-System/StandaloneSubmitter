@@ -1,18 +1,14 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 
 import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.InvalidErrorMessagesException;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 
 /**
@@ -23,8 +19,6 @@ import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
  * 
  */
 public class SubmissionResultHandler {
-    
-    private static final Logger LOGGER = LogManager.getLogger(SubmissionResultHandler.class);
     
     private static final String BLOCKED_BY_PRE_COMMIT_PREFIX
             = "Commit blocked by pre-commit hook (exit code 1) with output:\n";
@@ -53,11 +47,14 @@ public class SubmissionResultHandler {
     /**
      * Handles exceptions occurred during submitting the homework.
      * 
-     * @param commitExc
-     *            The Exception which was caught.
+     * @param commitExc The Exception which was caught.
+     * @param exercise The exercise that the submission that created this exception was for. Must be
+     *      non-<code>null</code> for error type {@link ErrorType#NO_EXERCISE_FOUND}.
+     * @param submissionFolder The folder name on the server where the failing submission should be committed to.
+     *      Usually this is the group name for group assignments or the user-name for single assignments.
+     *      May be <code>null</code> when not known.
      */
-    public void handleCommitException(SubmitException commitExc) {
-        SubmissionConfiguration config = handler.getConfiguration();
+    public void handleCommitException(SubmitException commitExc, Assignment exercise, String submissionFolder) {
         String errorMsg = null;
         if (null != commitExc.getErrorCode()) {
             switch (commitExc.getErrorCode()) {
@@ -75,19 +72,14 @@ public class SubmissionResultHandler {
                 }
                 break;
             case NO_EXERCISE_FOUND:
-                Assignment exercise = config.getExercise();
                 String userType = exercise.isGroupWork() ? I18nProvider.getText("submission.group")
                     : I18nProvider.getText("submission.user");
-                String location;
-                try {
-                    location = handler.getNetworkProtocol().getPathToSubmission(exercise).getSubmissionPath();
-                } catch (NetworkException e) {
-                    location = I18nProvider.getText("errors.stdmanagemt.unreachable");
-                    LOGGER.warn("Could not query REST server", e);
+                if (submissionFolder == null) {
+                    submissionFolder = I18nProvider.getText("errors.stdmanagemt.unreachable");
                 }
                 // 4 Parameters: Exercise name, user/group, user/group name, upload location 
                 errorMsg = I18nProvider.getText("submission.error.exercise_not_found", exercise.getName(), userType,
-                    location, commitExc.getLocation());
+                    submissionFolder, commitExc.getLocation());
                 break;
             case CANNOT_COMMIT:
                 errorMsg = I18nProvider.getText("submission.error.cannot_commit", commitExc.getLocation());

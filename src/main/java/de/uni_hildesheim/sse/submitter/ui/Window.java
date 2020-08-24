@@ -30,7 +30,6 @@ import de.uni_hildesheim.sse.submitter.settings.UiColorSettings;
 import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
 import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
-import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
 import de.uni_hildesheim.sse.submitter.svn.TestSubmitterProtocol;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
@@ -63,7 +62,6 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     private JButton replayBtn;
     private JButton reviewBtn;
     
-    private SubmissionResultHandler translator;
     private SubmissionConfiguration config;
     private RemoteRepository repository;
     private SubmitterProtocol protocol;
@@ -101,7 +99,6 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         setLocationRelativeTo(null);
         
         config = SubmissionConfiguration.load();
-        translator = new SubmissionResultHandler(this);
         LoginDialog dialog = new LoginDialog(this, config, protocol);
         dialog.setVisible(true);
         repository = dialog.getRepository();
@@ -124,7 +121,6 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * Returns the network protocol to communicate with the <b>student management system</b> via it's REST interface.
      * @return The network protocol for the REST server.
      */
-    @Override
     public SubmitterProtocol getNetworkProtocol() {
         return protocol;
     }
@@ -227,7 +223,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * @param folder A top level folder for a java project.
      */
     private void submitFolder(File folder) {
-        new SubmissionThread(this, config, translator, folder).start();
+        new SubmissionThread(this, config, folder).start();
     }
     
     /**
@@ -371,7 +367,11 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             colors().getErrorColor(), true);
     }
 
-    @Override
+    /**
+     * Getter for the configuration.
+     * 
+     * @return The {@link SubmissionConfiguration}.
+     */
     public SubmissionConfiguration getConfiguration() {
         return config;
     }
