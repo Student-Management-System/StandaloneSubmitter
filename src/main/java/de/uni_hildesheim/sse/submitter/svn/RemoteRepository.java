@@ -14,7 +14,7 @@ import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
+import org.tmatesoft.svn.core.auth.BasicAuthenticationManager;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
@@ -64,13 +64,10 @@ public class RemoteRepository implements Closeable {
         } catch (SVNException e) {
             throw new ServerNotFoundException(target);
         }
-        repository.setAuthenticationManager(
-            new DefaultSVNAuthenticationManager(null, false, config.getUser(), config.getPW(), null, null)
-        );
+        repository.setAuthenticationManager(BasicAuthenticationManager.newInstance(config.getUser(), config.getPW()));
         
         clientManager = SVNClientManager.newInstance(null,
-            new DefaultSVNAuthenticationManager(null, false, config.getUser(), config.getPW(), null, null)
-        );
+                BasicAuthenticationManager.newInstance(config.getUser(), config.getPW()));
     }
     
     /**
