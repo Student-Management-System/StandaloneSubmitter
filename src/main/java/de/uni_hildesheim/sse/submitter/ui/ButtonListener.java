@@ -8,6 +8,7 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +16,7 @@ import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
+import de.uni_hildesheim.sse.submitter.svn.Revision;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 
@@ -68,13 +70,21 @@ class ButtonListener implements ActionListener {
             parent.clearLog();
             parent.toggleButtons(false);
             parent.addProgressAnimator((JButton) evt.getSource());
-            try {   
-                parent.showHistory(parent.getRemoteRepository().getHistory(parent.getRemotePathOfCurrentExercise()));
-            } catch (SVNException | NetworkException e) {
-                parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error"));
-                LOGGER.warn("Could not show history.", e);
-            }
-            parent.toggleButtons(true);
+            
+            new Thread(() -> {
+                try {
+                    List<Revision> history = parent.getRemoteRepository()
+                            .getHistory(parent.getRemotePathOfCurrentExercise());
+                    
+                    SwingUtilities.invokeLater(() -> parent.showHistory(history));
+                } catch (SVNException | NetworkException e) {
+                    SwingUtilities.invokeLater(() ->
+                        parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error")));
+                    LOGGER.warn("Could not show history.", e);
+                }
+                SwingUtilities.invokeLater(() -> parent.toggleButtons(true));
+            }).start();
+            
             break;
         case ACTION_REVIEW:
             parent.clearLog();
