@@ -120,7 +120,7 @@ public class Submitter implements AutoCloseable {
             }
 
             // Commit exercise
-            String commitMsg = I18nProvider.getText("submission.commit.exercise") + config.getUser();
+            String commitMsg = I18nProvider.getText("submission.commit.exercise", config.getUser());
             try {
                 info = client.doCommit(new File[] {tempFolder}, false, commitMsg, null, null, false, false,
                         SVNDepth.INFINITY);

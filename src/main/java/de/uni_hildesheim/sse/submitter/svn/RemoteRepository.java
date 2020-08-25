@@ -1,22 +1,19 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.auth.BasicAuthenticationManager;
 import org.tmatesoft.svn.core.io.SVNRepository;
-import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
@@ -32,7 +29,7 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  * @author Adam Krafczyk
  * @author El-Sharkawy
  */
-public class RemoteRepository implements Closeable {
+public class RemoteRepository {
 
     public static final String MODE_SUBMISSION = "SUBMISSION";
     public static final String MODE_REPLAY = "REPLAY";
@@ -41,7 +38,7 @@ public class RemoteRepository implements Closeable {
     
     private SubmissionConfiguration config;
     private String target;
-    private SVNRepository repository;
+    private SVNURL svnUrl;
     private SVNClientManager clientManager;
     private SubmitterProtocol protocol;
     
@@ -59,12 +56,10 @@ public class RemoteRepository implements Closeable {
         
         target = ToolSettings.getConfig().getRepositoryURL();
         try {
-            SVNURL url = SVNURL.parseURIEncoded(target);
-            repository = SVNRepositoryFactory.create(url);
+            svnUrl = SVNURL.parseURIEncoded(target);
         } catch (SVNException e) {
             throw new ServerNotFoundException(target);
         }
-        repository.setAuthenticationManager(BasicAuthenticationManager.newInstance(config.getUser(), config.getPW()));
         
         clientManager = SVNClientManager.newInstance(null,
                 BasicAuthenticationManager.newInstance(config.getUser(), config.getPW()));
@@ -82,16 +77,16 @@ public class RemoteRepository implements Closeable {
         String[] targetPaths = null;
         try {
             String remotePath = protocol.getPathToSubmission(config.getExercise()).getAbsolutePathInRepository();
-            targetPaths = new String[]{remotePath};
+            targetPaths = new String[] {remotePath};
         } catch (NetworkException e) {
             throw new IOException(e);
         }
-        Collection<?> revisions = repository.log(targetPaths, null, 0, repository.getLatestRevision(), false, false);
         
-        for (Object o : revisions) {
-            SVNLogEntry logEntry = (SVNLogEntry) o;
-            result.add(new Revision(logEntry));
-        }
+        clientManager.getLogClient().doLog(svnUrl, targetPaths,
+                SVNRevision.HEAD, SVNRevision.create(0), SVNRevision.HEAD, false, false, Integer.MAX_VALUE,
+            (logEntry) -> {
+                result.add(new Revision(logEntry));
+            });
         
         return result;
     }
@@ -105,12 +100,17 @@ public class RemoteRepository implements Closeable {
     public boolean checkConnection() {
         boolean connected = false;
         
+        SVNRepository repository = null;
         try {
+            repository = clientManager.createRepository(svnUrl, false);
             repository.testConnection();
             connected = true;
         } catch (SVNException e) {
-            LOGGER.warn("Could not connect to sumbission server \"" + ToolSettings.getConfig().getRepositoryURL()
-                + "\"", e);
+            LOGGER.warn("Could not connect to sumbission server: " + svnUrl, e);
+        } finally {
+            if (repository != null) {
+                repository.closeSession();
+            }
         }
         
         return connected;
@@ -136,7 +136,7 @@ public class RemoteRepository implements Closeable {
         
         File tmpDir = Files.createTempDirectory("abgabe").toFile();
         try {
-            clientManager.getUpdateClient().doCheckout(repository.getLocation(), tmpDir,
+            clientManager.getUpdateClient().doCheckout(svnUrl, tmpDir,
                     SVNRevision.create(revision), SVNRevision.create(revision), SVNDepth.INFINITY, true);
             tmpDir = new File(tmpDir, config.getExercise().getName());
             String subFolderName = tmpDir.listFiles()[0].getName();
@@ -158,8 +158,6 @@ public class RemoteRepository implements Closeable {
      * @throws IOException if writing the files fails.
      */
     public void replay(String path) throws SVNException, IOException {
-        long latestRevision = 0;
-        
         String[] targetPaths = null;
         try {
             String remotePath = protocol.getPathToSubmission(config.getExercise()).getAbsolutePathInRepository();
@@ -168,16 +166,15 @@ public class RemoteRepository implements Closeable {
             throw new IOException(e);
         }
         
-        Collection<?> revisions = repository.log(targetPaths, null, 0, repository.getLatestRevision(), false, false);
+        AtomicLong latestRevision = new AtomicLong();
         
-        for (Object o : revisions) {
-            SVNLogEntry logEntry = (SVNLogEntry) o;
-            if (logEntry.getRevision() > latestRevision) {
-                latestRevision = logEntry.getRevision();
-            }
-        }
+        clientManager.getLogClient().doLog(svnUrl, targetPaths,
+                SVNRevision.HEAD, SVNRevision.HEAD, SVNRevision.HEAD, false, false, Integer.MAX_VALUE,
+            (logEntry) -> {
+                latestRevision.set(logEntry.getRevision());
+            });
         
-        replay(path, latestRevision);
+        replay(path, latestRevision.get());
     }
     
     /**
@@ -226,11 +223,6 @@ public class RemoteRepository implements Closeable {
                 recursiveCopy(file, new File(dst, file.getName()));
             }
         }
-    }
-    
-    @Override
-    public void close() {
-        repository.closeSession();
     }
     
 }
