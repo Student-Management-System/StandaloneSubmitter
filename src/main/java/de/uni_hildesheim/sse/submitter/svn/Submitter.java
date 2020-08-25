@@ -114,7 +114,7 @@ public class Submitter implements AutoCloseable {
             // Prepare Commit
             numJavaFiles = prepareCommit(folder);
             try {
-                updateState(tempFolder);
+                clientManager.getWCClient().doAdd(tempFolder, true, false, false, SVNDepth.INFINITY, false, false);
             } catch (SVNException e) {
                 throw new SubmitException(ErrorType.DO_STATUS_NOT_POSSIBLE, null);
             }
@@ -145,27 +145,6 @@ public class Submitter implements AutoCloseable {
         }
 
         return new SubmitResult(numJavaFiles, info);
-    }
-
-    /**
-     * Recursive update method to update also sub packages/folders of a submission.
-     * Checks for new, deleted, and modified files/folders which must be submitted. 
-     * @param folder A folder to check, also all sub folders will be checked. Should be stated with {@link #tempFolder}.
-     * @throws SVNException In case of an error (the used library has no description for that).
-     */
-    private void updateState(File folder) throws SVNException {
-        clientManager.getStatusClient().doStatus(folder, SVNRevision.HEAD, SVNDepth.INFINITY, false, false,
-                false, false, new SVNStatusHandler(clientManager.getWCClient()), null);
-        
-        File[] nestedFiles = folder.listFiles();
-        if (null != nestedFiles) {
-            for (int i = 0; i < nestedFiles.length; i++) {
-                File nestedFile = nestedFiles[i];
-                if (nestedFile.isDirectory() && !".svn".equalsIgnoreCase(nestedFile.getName())) {
-                    updateState(nestedFile);
-                }
-            }
-        }
     }
 
     /**
