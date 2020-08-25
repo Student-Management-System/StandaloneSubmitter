@@ -1,10 +1,8 @@
 package de.uni_hildesheim.sse.submitter.ui;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
 
-import org.apache.logging.log4j.LogManager;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
@@ -51,14 +49,13 @@ class SubmissionThread extends Thread {
         } else {
             SubmissionResultHandler resultHandler = new SubmissionResultHandler(parent);
             
-            try (Submitter submitter = new Submitter(config, parent.getNetworkProtocol())) {
+            try {
+                Submitter submitter = Submitter.create(config, parent.getNetworkProtocol());
                 SubmitResult result = submitter.submitFolder(projectFolder);
                 resultHandler.handleCommitResult(result.getCommitInfo());
                 if (result.getNumJavFiles() <= 0) {
                     parent.showErrorMessage(I18nProvider.getText("submission.error.no_java_files"));
                 }
-            } catch (IOException e) {
-                LogManager.getLogger(SubmissionThread.class).warn("Could not clean up temp folder.", e);
             } catch (SubmitException e) {
                 String submissionPath = null;
                 try {

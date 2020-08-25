@@ -111,7 +111,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
         }
         if (config.getProjectFolder() != null) {
-            setSelectedPath(config.getProjectFolder().getPath());
+            setSelectedPath(config.getProjectFolder());
         }
         
         if (Starter.DEBUG) {
@@ -319,8 +319,9 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * 
      * @param path the new path.
      */
-    void setSelectedPath(String path) {
-        sourceDirectoryField.setText(path);
+    void setSelectedPath(File path) {
+        sourceDirectoryField.setText(path.getAbsolutePath());
+        config.setProjectFolder(path);
     }
     
     /**
@@ -398,15 +399,6 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     public void showErrorMessage(String message) {
         logArea.append(I18nProvider.getText("errors.messages.error") + ": " + message,
             colors().getErrorColor(), true);
-    }
-
-    /**
-     * Getter for the configuration.
-     * 
-     * @return The {@link SubmissionConfiguration}.
-     */
-    public SubmissionConfiguration getConfiguration() {
-        return config;
     }
 
     @Override

@@ -28,11 +28,6 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 import org.tmatesoft.svn.core.wc.SVNWCClient;
 
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
-import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
-import net.ssehub.exercisesubmitter.protocol.frontend.Assignment.State;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
-
 /**
  * Integration tests for {@link Submitter}. Tests committing to temporary local SVN repositories.
  * 
@@ -43,17 +38,10 @@ public class SubmitterIT {
     private Set<File> temporaryDirectories = new HashSet<>();
 
     @Test
-    @DisplayName("throws if SVN repository doesnt exist")
-    public void repoDoesntExist() throws SubmitException, IOException {
-        File svnFolder = createTemporaryDirectory();
-        
-        SubmissionConfiguration config = new SubmissionConfiguration("someStudent", "123456".toCharArray(),
-                new Assignment("Homework04", "Homework04", State.SUBMISSION, true));
-        
-        SubmitterProtocol protocol = new TestSubmitterProtocol(null, null, null, svnFolder.toURI().toString());
-        
+    @DisplayName("throws if SVN repository URL is invalid")
+    public void invalidRepoUrl() throws SubmitException, IOException {
         assertThrows(SubmitException.class,
-                () -> new Submitter(config, protocol)
+                () -> new Submitter("this:is:invalid", "Homework04", "someStudent", "123456".toCharArray())
         );
     }
     
@@ -62,11 +50,6 @@ public class SubmitterIT {
     public void commitNoProblems() throws SubmitException, IOException, SVNException {
         File svnFolder = createTemporaryDirectory();
         setupSvnRepoForSubmission(svnFolder, "Homework04", "JP001");
-        
-        SubmissionConfiguration config = new SubmissionConfiguration("someStudent", "123456".toCharArray(),
-                new Assignment("Homework04", "Homework04", State.SUBMISSION, true));
-        
-        SubmitterProtocol protocol = new TestSubmitterProtocol(null, null, null, "file:///" + svnFolder.getAbsolutePath());
         
         String fileContent = "public class Main {\n"
                 + "    public static void main(String[] args) {\n"
@@ -80,9 +63,9 @@ public class SubmitterIT {
         
         assertFileNotInRepository(svnFolder, "Homework04/JP001/Main.java");
         
-        Submitter submitter = new Submitter(config, protocol);
+        Submitter submitter = new Submitter("file:///" + svnFolder.getAbsolutePath() + "/Homework04/JP001",
+                "HomeWork04", "someStudent", "123456".toCharArray());
         SubmitResult result = submitter.submitFolder(submissionFolder);
-        submitter.close();
         
         assertAll(
                 () -> assertEquals(1, result.getNumJavFiles(), "number of submitted Java files should be correct"),

@@ -127,8 +127,7 @@ class ButtonListener implements ActionListener {
         switch (result) {
         case JFileChooser.APPROVE_OPTION:
             File projectFolder = fileChooser.getSelectedFile().getAbsoluteFile();
-            parent.getConfiguration().setProjectFolder(projectFolder);
-            parent.setSelectedPath(projectFolder.getPath());
+            parent.setSelectedPath(projectFolder);
             break;
         case JFileChooser.CANCEL_OPTION:
             break;

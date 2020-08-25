@@ -15,9 +15,6 @@ import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.auth.BasicAuthenticationManager;
-import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
-import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
-import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.wc.DefaultSVNCommitParameters;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNCommitClient;
@@ -28,6 +25,7 @@ import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
@@ -36,32 +34,37 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  * @author El-Sharkawy
  * 
  */
-public class Submitter implements AutoCloseable {
+public class Submitter {
 
-    private SubmissionConfiguration config;
-    private File tempFolder;
     private SVNCommitClient client;
     private SVNUpdateClient updateClient;
     private SVNURL url;
     private final SVNClientManager clientManager;
-    private SubmitterProtocol protocol;
+    private String user;
+    private String exerciseName;
 
     /**
-     * Sole constructor.
-     * @param config The local settings for submitting projects (e.g. user name and password).
-     * @param protocol The network protocol for querying the REST server
-     * @throws SubmitException If an error occurred before the the server could run the hook script.
+     * Creates a submitter with the given parameters.
+     * 
+     * @param url The URL to submit to. This must already contain the exercise and group elements where to submit.
+     * @param exerciseName The name of the exercise that is submitted.
+     * @param user The username to use for authentication to the SVN server.
+     * @param pw The password to use for authentication to the SVN server.
+     * 
+     * @throws SubmitException If the given URl is invalid.
      */
-    public Submitter(SubmissionConfiguration config, SubmitterProtocol protocol) throws SubmitException {
-        this.config = config;
-        this.protocol = protocol;
-        url = composeTarget(config);
+    public Submitter(String url, String exerciseName, String user, char[] pw) throws SubmitException {
+        this.user = user;
+        this.exerciseName = exerciseName;
+        
+        try {
+            this.url = SVNURL.parseURIEncoded(url);
+        } catch (SVNException e) {
+            throw new SubmitException(ErrorType.NO_REPOSITORY_FOUND, url);
+        }
+        
         clientManager = SVNClientManager.newInstance(null,
-                BasicAuthenticationManager.newInstance(config.getUser(), config.getPW()));
-        DAVRepositoryFactory.setup();
-        SVNRepositoryFactoryImpl.setup();
-        FSRepositoryFactory.setup();
-
+                BasicAuthenticationManager.newInstance(user, pw));
         client = clientManager.getCommitClient();
         client.setCommitParameters(new DefaultSVNCommitParameters() {
             @Override
@@ -78,26 +81,28 @@ public class Submitter implements AutoCloseable {
     }
     
     /**
-     * Composes the target URL. 
-     * @param config The local settings for submitting projects (e.g. user name and password).
-     * @return the target URL as String
-     * @throws SubmitException If an error occurred.
+     * Creates a submitter from the given configuration and student management system connection.
+     * <p>
+     * TODO: refactor this away.
+     * 
+     * @param config The configuration to get the username, password, and current {@link Assignment} from.
+     * @param protocol The protocol to query the student managemetn system for the group name.
+     * 
+     * @return A {@link Submitter} for the given configuration.
+     * 
+     * @throws SubmitException If the student managemen system could not be queried or creating the submitter fails.
      */
-    private SVNURL composeTarget(SubmissionConfiguration config) throws SubmitException {
-        SVNURL url = null;
-        String target = null;
+    public static Submitter create(SubmissionConfiguration config, SubmitterProtocol protocol) throws SubmitException {
         try {
-            target = protocol.getPathToSubmission(config.getExercise()).getSubmissionURL();
-            url = SVNURL.parseURIEncoded(target);
+            String url = protocol.getPathToSubmission(config.getExercise()).getSubmissionURL();
+            
+            return new Submitter(url, config.getExercise().getName(), config.getUser(), config.getPW());
+            
         } catch (NetworkException e1) {
             throw new SubmitException(ErrorType.COULD_NOT_QUERY_MANAGEMENT_SYSTEM, config.getExercise().getName());
-        } catch (SVNException e) {
-            throw new SubmitException(ErrorType.NO_REPOSITORY_FOUND, target);
         }
-        
-        return url;
     }
-
+    
     /**
      * Submits a user project to the submission server.
      * @param folder A top level folder of a java project, which shall be submitted.
@@ -107,29 +112,31 @@ public class Submitter implements AutoCloseable {
     public SubmitResult submitFolder(File folder) throws SubmitException {
         SVNCommitInfo info = null;
         int numJavaFiles = 0;
+        
+        File checkoutFolder = null;
         try {
             // Checkout Exercise
-            checkOut();
+            checkoutFolder = checkOut();
 
             // Prepare Commit
-            numJavaFiles = prepareCommit(folder);
+            numJavaFiles = prepareCommit(folder, checkoutFolder);
             try {
-                clientManager.getWCClient().doAdd(tempFolder, true, false, false, SVNDepth.INFINITY, false, false);
+                clientManager.getWCClient().doAdd(checkoutFolder, true, false, false, SVNDepth.INFINITY, false, false);
             } catch (SVNException e) {
                 throw new SubmitException(ErrorType.DO_STATUS_NOT_POSSIBLE, null);
             }
 
             // Commit exercise
-            String commitMsg = I18nProvider.getText("submission.commit.exercise", config.getUser());
+            String commitMsg = I18nProvider.getText("submission.commit.exercise", user);
             try {
-                info = client.doCommit(new File[] {tempFolder}, false, commitMsg, null, null, false, false,
+                info = client.doCommit(new File[] {checkoutFolder}, false, commitMsg, null, null, false, false,
                         SVNDepth.INFINITY);
             } catch (SVNAuthenticationException e) {
                 throw new SubmitException(ErrorType.CANNOT_COMMIT, url.toString());
             } catch (SVNException e) {
                 SVNErrorMessage errorMsg = e.getErrorMessage();
                 if (errorMsg.hasChildWithErrorCode(SVNErrorCode.REPOS_HOOK_FAILURE)) {
-                    info = new SVNCommitInfo(-1, config.getUser(), new Date(), errorMsg);
+                    info = new SVNCommitInfo(-1, user, new Date(), errorMsg);
                 } else {
                     throw new SubmitException(ErrorType.CANNOT_COMMIT, url.toString());
                 }
@@ -137,10 +144,8 @@ public class Submitter implements AutoCloseable {
 
         // Cleanup
         } finally {
-            try {
-                FileUtils.deleteDirectory(tempFolder);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (checkoutFolder != null) {
+                FileUtils.deleteQuietly(checkoutFolder);
             }
         }
 
@@ -150,40 +155,45 @@ public class Submitter implements AutoCloseable {
     /**
      * Checkouts the exercise folder from the server.
      * Part of the {@link #submitFolder(File)} method. This is needed by SVN.
+     * 
+     * @return The location where the SVN working copy was checked out.
+     * 
      * @throws SubmitException If an error occurred before the the server could run the hook script.
      */
-    private void checkOut() throws SubmitException {
+    private File checkOut() throws SubmitException {
+        File checkoutLocation;
         try {
-            tempFolder = Files.createTempDirectory(null, new FileAttribute<?>[] {}).toFile();
-            tempFolder.deleteOnExit();
+            checkoutLocation = Files.createTempDirectory(null, new FileAttribute<?>[] {}).toFile();
+            checkoutLocation.deleteOnExit();
         } catch (IOException e) {
             throw new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, System.getProperty("java.io.tmpdir"));
         }
         try {
-            updateClient.doCheckout(url, tempFolder, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, true);
+            updateClient.doCheckout(url, checkoutLocation, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, true);
         } catch (SVNException e) {
             throw new SubmitException(ErrorType.NO_EXERCISE_FOUND, url.toString());
         }
+        
+        return checkoutLocation;
     }
 
     /**
      * Configures the {@link #tempFolder} for submission (copy files and so on).
+     * 
      * @param sourceFolder A top level folder of a java project, which shall be submitted.
+     * @param targetFolder The target folder where the files should be placed.
+     * 
      * @return The number of java files in the sourceFolder.
      * @throws SubmitException If an error occurred before the the server could run the hook script.
      */
-    private int prepareCommit(File sourceFolder) throws SubmitException {
-        FolderInitializer initilizer = new FolderInitializer(sourceFolder, tempFolder);
+    private int prepareCommit(File sourceFolder, File targetFolder) throws SubmitException {
+        FolderInitializer initilizer = new FolderInitializer(sourceFolder, targetFolder);
         try {
-            initilizer.init(config.getExercise().getName());
+            initilizer.init(exerciseName);
             return FileUtils.listFiles(sourceFolder, new String[] {"java"}, true).size();
         } catch (IOException e) {
             throw new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, System.getProperty("java.io.tmpdir"));
         }
     }
 
-    @Override
-    public void close() throws IOException {
-        FileUtils.deleteDirectory(tempFolder);
-    }
 }
