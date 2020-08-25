@@ -50,7 +50,6 @@ public class Starter {
             LOGGER.warn("Could not switch UI to native look and feel", e);
         }
         
-        LOGGER.info("Creating main window...");
         new StandaloneSubmitterWindow();
     }
 
