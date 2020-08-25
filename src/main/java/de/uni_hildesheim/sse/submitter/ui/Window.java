@@ -62,6 +62,8 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     private JButton replayBtn;
     private JButton reviewBtn;
     
+    private ButtonProgressAnimator progressAnimator;
+    
     private SubmissionConfiguration config;
     private RemoteRepository repository;
     private SubmitterProtocol protocol;
@@ -231,10 +233,29 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * @param enabled <code>true</code> when the buttons should become enabled
      */
     void toggleButtons(boolean enabled) {
+        if (enabled && this.progressAnimator != null) {
+            this.progressAnimator.stop();
+            this.progressAnimator = null;
+        }
+        
         submitBtn.setEnabled(enabled);
         historyBtn.setEnabled(enabled);
         replayBtn.setEnabled(enabled);
         reviewBtn.setEnabled(enabled);
+    }
+    
+    /**
+     * Adds a {@link ButtonProgressAnimator} to the given button. This class takes care that the progress animator
+     * is stopped when appropriate.
+     * 
+     * @param button The button to add the progress animator to.
+     */
+    void addProgressAnimator(JButton button) {
+        if (this.progressAnimator != null) {
+            this.progressAnimator.stop();
+        }
+        this.progressAnimator = new ButtonProgressAnimator(button);
+        this.progressAnimator.start();
     }
     
     /**

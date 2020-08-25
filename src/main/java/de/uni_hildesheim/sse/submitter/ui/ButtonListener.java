@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
@@ -55,14 +56,16 @@ class ButtonListener implements ActionListener {
             break;
         case ACTION_SUBMIT:
             parent.toggleButtons(false);
+            parent.addProgressAnimator((JButton) evt.getSource());
             parent.submit();
             break;
         case ACTION_REPLAY:
-            openReplayDialog();
+            openReplayDialog(evt);
             break;
         case ACTION_HISTORY:
             parent.clearLog();
             parent.toggleButtons(false);
+            parent.addProgressAnimator((JButton) evt.getSource());
             try {   
                 parent.showHistory(parent.getRemoteRepository().getHistory());
             } catch (SVNException | IOException e) {
@@ -88,13 +91,16 @@ class ButtonListener implements ActionListener {
 
     /**
      * Creates and handles the replay previous version dialog.
+     * 
+     * @param evt The event that caused this dialog to open.
      */
-    private void openReplayDialog() {
+    private void openReplayDialog(ActionEvent evt) {
         parent.clearLog();
         if (parent.getSelectedPath().trim().isEmpty()) {
             parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
         } else {
             parent.toggleButtons(false);
+            parent.addProgressAnimator((JButton) evt.getSource());
             int result = JOptionPane.showConfirmDialog(parent, I18nProvider.getText("gui.warning.delete_dir_on_replay"),
                     I18nProvider.getText("gui.elements.replay"), JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE);
