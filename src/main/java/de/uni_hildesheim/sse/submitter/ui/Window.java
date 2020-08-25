@@ -16,6 +16,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,6 +64,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     private JButton historyBtn;
     private JButton replayBtn;
     private JButton reviewBtn;
+    private JButton browseBtn;
     
     private ButtonProgressAnimator progressAnimator;
     
@@ -96,6 +100,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         
         // Initialize components
         initComponents();
+        createLayout();
         
         setVisible(true);
         setLocationRelativeTo(null);
@@ -129,6 +134,17 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     public String getRemotePathOfCurrentExercise() throws NetworkException {
         Assignment currentExercise = config.getExercise();
         return protocol.getPathToSubmission(currentExercise).getAbsolutePathInRepository();
+    }
+    
+    /**
+     * Returns a list of {@link Assignment}s that are currently in the reviewed state.
+     * 
+     * @return List of {@link Assignment}s that were reviewed.
+     * 
+     * @throws NetworkException If fetching the list fails.
+     */
+    public List<Assignment> getAssignmentsInReviewedState() throws NetworkException {
+        return protocol.getReviewedAssignments();
     }
     
     /**
@@ -167,12 +183,31 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     }
     
     /**
-     * Creates and adds all components.
+     * Creates components that are stored as class attributes.
      */
     private void initComponents() {
         ButtonListener listener = new ButtonListener(this);
         
         sourceDirectoryField = new JTextField();
+        sourceDirectoryField.getDocument().addDocumentListener(new DocumentListener() {
+            
+            @Override
+            public void removeUpdate(DocumentEvent evt) {
+                config.setProjectFolder(new File(sourceDirectoryField.getText()));
+            }
+            
+            @Override
+            public void insertUpdate(DocumentEvent evt) {
+                config.setProjectFolder(new File(sourceDirectoryField.getText()));
+            }
+            
+            @Override
+            public void changedUpdate(DocumentEvent evt) {
+                config.setProjectFolder(new File(sourceDirectoryField.getText()));
+            }
+            
+        });
+        
         logArea = new LogArea();
         assignmentBox = new JComboBox<>();
         assignmentBox.setRenderer(new AssignmentComboxRenderer());
@@ -184,7 +219,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
             }
         });
         
-        JButton browseBtn = createButton(I18nProvider.getText("gui.elements.browse"),
+        browseBtn = createButton(I18nProvider.getText("gui.elements.browse"),
                 ButtonListener.ACTION_BROWSE_FOLDER, listener);
         replayBtn = createButton(I18nProvider.getText("gui.elements.replay"),
                 ButtonListener.ACTION_REPLAY, listener);
@@ -194,7 +229,12 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
                 ButtonListener.ACTION_HISTORY, listener);
         reviewBtn = createButton(I18nProvider.getText("gui.elements.review"),
                 ButtonListener.ACTION_REVIEW, listener);
-        
+    }
+    
+    /**
+     * Creates the layout and adds them to this window.
+     */
+    private void createLayout() {
         // Create repository chooser panel
         JPanel repoChooserPanel = new JPanel();
         repoChooserPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -354,37 +394,46 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      */
     void replayCorrection(Assignment assignment) {
         toggleButtons(false);
+        addProgressAnimator(reviewBtn);
         clearLog();
         
         config.setExercise(assignment);
         
         showInfoMessage(I18nProvider.getText("gui.log.replaying"));
-        try {
-            getRemoteRepository().replay(new File(getSelectedPath()), getRemotePathOfCurrentExercise());
-            showInfoMessage(I18nProvider.getText("gui.log.replaying_successful"));
-        } catch (SVNException e) {
-            if (e.getMessage().contains("404 Not Found")) {
-                try {
-                    SubmissionTarget dest = protocol.getPathToSubmission(assignment);
-                    showErrorMessage(I18nProvider.getText("gui.error.replay.no_submission_error",
-                        dest.getAssignmentName(), dest.getSubmissionPath(),
-                        ToolSettings.getConfig().getCourse().getTeamMail()));
-                } catch (NetworkException e1) {
+        
+        new Thread(() -> {
+            try {
+                getRemoteRepository().replay(new File(getSelectedPath()), getRemotePathOfCurrentExercise());
+                config.setExercise((Assignment) assignmentBox.getSelectedItem());
+                
+                SwingUtilities.invokeLater(() -> {
+                    showInfoMessage(I18nProvider.getText("gui.log.replaying_successful"));
+                    toggleButtons(true);
+                });
+                
+            } catch (SVNException e) {
+                if (e.getMessage().contains("404 Not Found")) {
+                    try {
+                        SubmissionTarget dest = protocol.getPathToSubmission(assignment);
+                        SwingUtilities.invokeLater(() ->
+                            showErrorMessage(I18nProvider.getText("gui.error.replay.no_submission_error",
+                                dest.getAssignmentName(), dest.getSubmissionPath(),
+                                ToolSettings.getConfig().getCourse().getTeamMail())));
+                    } catch (NetworkException e1) {
+                        LOGGER.error("Could not replay submission from server", e);
+                        SwingUtilities.invokeLater(() ->
+                            showErrorMessage(I18nProvider.getText("gui.error.replay_error")));
+                    }
+                } else {
                     LOGGER.error("Could not replay submission from server", e);
-                    showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
+                    SwingUtilities.invokeLater(() -> showErrorMessage(I18nProvider.getText("gui.error.replay_error")));
                 }
-            } else {
+            } catch (IOException | NetworkException e) {
                 LOGGER.error("Could not replay submission from server", e);
-                showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
+                
+                SwingUtilities.invokeLater(() -> showErrorMessage(I18nProvider.getText("gui.error.replay_error")));
             }
-        } catch (IOException | NetworkException e) {
-            LOGGER.error("Could not replay submission from server", e);
-            showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
-        }
-        
-        config.setExercise((Assignment) assignmentBox.getSelectedItem());
-        
-        toggleButtons(true);
+        }).start();
     }
 
     /**

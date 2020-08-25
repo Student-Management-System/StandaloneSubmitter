@@ -3,6 +3,7 @@ package de.uni_hildesheim.sse.submitter.ui;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -12,13 +13,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * A dialog to review corrected exercises.
@@ -27,7 +23,6 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  * @author El-Sharkawy
  */
 class ReviewDialog extends JDialog implements ActionListener {
-    private static final Logger LOGGER = LogManager.getLogger(ReviewDialog.class);
 
     private static final long serialVersionUID = -2707409724385716679L;
     
@@ -40,26 +35,16 @@ class ReviewDialog extends JDialog implements ActionListener {
     
     /**
      * Creates a {@link ReviewDialog} for the given parent window.
+     * 
      * @param parent The parent window.
+     * @param reviewedAssignments The list of assignments that are reviewed and may be selected in this dialog.
      */
-    ReviewDialog(Window parent) {
+    ReviewDialog(Window parent, List<Assignment> reviewedAssignments) {
         this.parent = parent;
-        SubmitterProtocol protocol = parent.getNetworkProtocol();
         
         assessmentsBox = new JComboBox<>();
         assessmentsBox.setRenderer(new AssignmentComboxRenderer());
-        try {
-            protocol.getReviewedAssignments().stream()
-                .forEach(a -> assessmentsBox.addItem(a));
-        } catch (NetworkException e) {
-            LOGGER.error("Could not contact student management server after successful login.", e);
-            // This shouldn't happen here... (since it worked in LoginDialog)
-            parent.showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
-        }
-        if (assessmentsBox.getItemCount() == 0) {
-            // close dialog
-            return;
-        }
+        reviewedAssignments.stream().forEach(assessmentsBox::addItem);
         
         JPanel pane = new JPanel();
         setContentPane(pane);
@@ -89,15 +74,15 @@ class ReviewDialog extends JDialog implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent evt) {
+        dispose();
         if (evt.getActionCommand().equals(ACTION_OK)) {
-            int result = JOptionPane.showConfirmDialog(this, I18nProvider.getText("gui.warning.delete_dir_on_replay"),
+            int result = JOptionPane.showConfirmDialog(parent, I18nProvider.getText("gui.warning.delete_dir_on_replay"),
                     I18nProvider.getText("gui.elements.replay"), JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
                 parent.replayCorrection((Assignment) assessmentsBox.getSelectedItem());
             }
         }
-        setVisible(false);
     }
     
 }

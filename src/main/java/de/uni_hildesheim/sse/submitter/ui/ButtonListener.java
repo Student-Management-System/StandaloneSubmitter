@@ -3,6 +3,7 @@ package de.uni_hildesheim.sse.submitter.ui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -15,6 +16,7 @@ import org.tmatesoft.svn.core.SVNException;
 import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 
 /**
  * Listener for all buttons in the GUI.
@@ -79,7 +81,19 @@ class ButtonListener implements ActionListener {
             if (parent.getSelectedPath().trim().isEmpty()) {
                 parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
             } else {
-                new ReviewDialog(parent);
+                try {
+                    List<Assignment> assignments = parent.getAssignmentsInReviewedState();
+                    if (assignments.size() == 0) {
+                        parent.showInfoMessage(I18nProvider.getText("gui.error.no_review_repos"));
+                    } else {
+                        new ReviewDialog(parent, assignments);
+                    }
+                    
+                } catch (NetworkException e) {
+                    LOGGER.error("Could not contact student management server after successful login.", e);
+                    // This shouldn't happen here... (since it worked in LoginDialog)
+                    parent.showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
+                }
             }
             break;
         default:

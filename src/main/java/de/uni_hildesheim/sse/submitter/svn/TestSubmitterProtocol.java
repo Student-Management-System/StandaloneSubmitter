@@ -38,7 +38,7 @@ public class TestSubmitterProtocol extends SubmitterProtocol {
     
     @Override
     public List<Assignment> getOpenAssignments() throws NetworkException {
-        return Arrays.asList(new Assignment("Testblatt01Aufgabe01", "JP001", State.SUBMISSION, true));
+        return Arrays.asList(new Assignment("Testblatt01Aufgabe01", "Testblatt01Aufgabe01", State.SUBMISSION, true));
     }
     
     @Override
@@ -48,7 +48,7 @@ public class TestSubmitterProtocol extends SubmitterProtocol {
     
     @Override
     public List<Assignment> getReviewedAssignments() throws NetworkException {
-        return Arrays.asList();
+        return Arrays.asList(new Assignment("Testblatt01Aufgabe01", "Testblatt01Aufgabe01", State.REVIEWED, false));
     }
     
     @Override
