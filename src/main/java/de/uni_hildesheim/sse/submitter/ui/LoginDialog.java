@@ -224,7 +224,8 @@ class LoginDialog extends JDialog implements ActionListener {
                 boolean success = protocol.login(user, new String(pw));
                 if (success) {
                     try {
-                        repository = new RemoteRepository(config, protocol);
+                        repository = new RemoteRepository(ToolSettings.getConfig().getRepositoryURL(),
+                                config.getUser(), config.getPW());
                         // Double check: Check that credentials are also accepted by the submission server
                         success = repository.checkConnection();
                         if (!success) {

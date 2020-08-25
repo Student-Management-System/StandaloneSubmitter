@@ -120,6 +120,18 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     }
     
     /**
+     * Returns the path for the remote SVN repository of the currently selected exercise.
+     * 
+     * @return The remote path of the current exercise.
+     * 
+     * @throws NetworkException If the group name could not be queried from the student management system.
+     */
+    public String getRemotePathOfCurrentExercise() throws NetworkException {
+        Assignment currentExercise = config.getExercise();
+        return protocol.getPathToSubmission(currentExercise).getAbsolutePathInRepository();
+    }
+    
+    /**
      * Returns the network protocol to communicate with the <b>student management system</b> via it's REST interface.
      * @return The network protocol for the REST server.
      */
@@ -327,10 +339,10 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         clearLog();
         showInfoMessage(I18nProvider.getText("gui.log.replaying"));
         try {
-            getRemoteRepository().replay(getSelectedPath(), revision);
+            getRemoteRepository().replay(revision, new File(getSelectedPath()), getRemotePathOfCurrentExercise());
             showInfoMessage(I18nProvider.getText("gui.log.replaying_successful"));
-        } catch (SVNException | IOException e) {
-            e.printStackTrace();
+        } catch (SVNException | IOException | NetworkException e) {
+            LOGGER.error("Could not replay submission from server", e);
             showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
         }
     }
@@ -347,7 +359,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         
         showInfoMessage(I18nProvider.getText("gui.log.replaying"));
         try {
-            getRemoteRepository().replay(getSelectedPath());
+            getRemoteRepository().replay(new File(getSelectedPath()), getRemotePathOfCurrentExercise());
             showInfoMessage(I18nProvider.getText("gui.log.replaying_successful"));
         } catch (SVNException e) {
             if (e.getMessage().contains("404 Not Found")) {
@@ -364,7 +376,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
                 LOGGER.error("Could not replay submission from server", e);
                 showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
             }
-        } catch (IOException e) {
+        } catch (IOException | NetworkException e) {
             LOGGER.error("Could not replay submission from server", e);
             showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
         }

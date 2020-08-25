@@ -5,7 +5,6 @@ import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -19,6 +18,7 @@ import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 
 /**
  * A dialog for selecting the version to replay.
@@ -45,9 +45,9 @@ class ReplayDialog extends JDialog implements ActionListener {
      * Creates a {@link ReplayDialog} with the given parent.
      * @param parent the parent window
      * @throws SVNException if unable to get repositories
-     * @throws IOException if writing the files fails.
+     * @throws NetworkException if the group name of the current exercise cannot be retrieved.
      */
-    ReplayDialog(Window parent) throws SVNException, IOException {
+    ReplayDialog(Window parent) throws SVNException, NetworkException {
         this.parent = parent;
         
         JButton okButton = new JButton("Ok");
@@ -63,7 +63,7 @@ class ReplayDialog extends JDialog implements ActionListener {
         bottomPanel.add(okButton);
         bottomPanel.add(cancelButton);
         
-        revisions = parent.getRemoteRepository().getHistory();
+        revisions = parent.getRemoteRepository().getHistory(parent.getRemotePathOfCurrentExercise());
         DefaultListModel<String> listModel = new DefaultListModel<String>();
         for (int i = 0; i < revisions.size(); i++) {
             listModel.add(i, revisions.get(i).toString());

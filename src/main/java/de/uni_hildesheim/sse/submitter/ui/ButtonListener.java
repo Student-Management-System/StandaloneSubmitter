@@ -3,7 +3,6 @@ package de.uni_hildesheim.sse.submitter.ui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -15,6 +14,7 @@ import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
+import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 
 /**
  * Listener for all buttons in the GUI.
@@ -67,10 +67,9 @@ class ButtonListener implements ActionListener {
             parent.toggleButtons(false);
             parent.addProgressAnimator((JButton) evt.getSource());
             try {   
-                parent.showHistory(parent.getRemoteRepository().getHistory());
-            } catch (SVNException | IOException e) {
-                // Shouldn't happen
-                parent.showErrorMessage(I18nProvider.getText("gui.error.login_wrong"));
+                parent.showHistory(parent.getRemoteRepository().getHistory(parent.getRemotePathOfCurrentExercise()));
+            } catch (SVNException | NetworkException e) {
+                parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error"));
                 LOGGER.warn("Could not show history.", e);
             }
             parent.toggleButtons(true);
@@ -107,9 +106,8 @@ class ButtonListener implements ActionListener {
             if (result == JOptionPane.OK_OPTION) {
                 try {
                     new ReplayDialog(parent);
-                } catch (SVNException | IOException e) {
-                    // Shouldn't happen
-                    parent.showErrorMessage(I18nProvider.getText("gui.error.login_wrong"));
+                } catch (SVNException | NetworkException e) {
+                    parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error"));
                 } finally {
                     parent.toggleButtons(true);
                 }

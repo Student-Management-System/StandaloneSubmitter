@@ -1,5 +1,10 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.Objects;
+
 import org.tmatesoft.svn.core.SVNLogEntry;
 
 /**
@@ -9,8 +14,12 @@ import org.tmatesoft.svn.core.SVNLogEntry;
  */
 public class Revision {
 
-    private String description;
+    private static final DateTimeFormatter DATE_FORMATTER
+            = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:MM", Locale.ROOT).withZone(ZoneId.systemDefault());
+    
     private long revision;
+    
+    private String description;
     
     /**
      * Creates a {@link Revision} for the given {@link SVNLogEntry}.
@@ -18,7 +27,7 @@ public class Revision {
      */
     public Revision(SVNLogEntry logEntry) {
         StringBuffer buf = new StringBuffer();
-        buf.append(logEntry.getDate());
+        buf.append(DATE_FORMATTER.format(logEntry.getDate().toInstant()));
         buf.append(" (");
         buf.append(logEntry.getRevision());
         buf.append("): ");
@@ -30,6 +39,19 @@ public class Revision {
         revision = logEntry.getRevision();
     }
     
+    /**
+     * Creates a {@link Revision} with the given parameters.
+     * 
+     * @param revision The revision number.
+     * @param description The description of this revision.
+     */
+    public Revision(long revision, String description) {
+        this.revision = revision;
+        this.description = description;
+    }
+
+
+
     @Override
     public String toString() {
         return description;
@@ -41,6 +63,23 @@ public class Revision {
      */
     public long getRevision() {
         return revision;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(description, revision);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Revision)) {
+            return false;
+        }
+        Revision other = (Revision) obj;
+        return Objects.equals(description, other.description) && revision == other.revision;
     }
     
 }

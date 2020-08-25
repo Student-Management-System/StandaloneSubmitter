@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNDepth;
@@ -18,10 +19,6 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
-import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * Contains methods to fetch information from the remote repository.
@@ -36,53 +33,42 @@ public class RemoteRepository {
     
     private static final Logger LOGGER = LogManager.getLogger(RemoteRepository.class);
     
-    private SubmissionConfiguration config;
-    private String target;
     private SVNURL svnUrl;
     private SVNClientManager clientManager;
-    private SubmitterProtocol protocol;
     
     /**
-     * Creates a repository object for the server given in configuration.
+     * Creates a {@link RemoteRepository} for the given server with the given credentials.
      * 
-     * @param config contains information about server, user, password, etc.
-     * @param protocol The network protocol for querying the REST server
+     * @param url The URL of the SVN server.
+     * @param user The username to use.
+     * @param password The password to use.
      * 
-     * @throws ServerNotFoundException when unable to connect to server
+     * @throws ServerNotFoundException If the URL is malformed.
      */
-    public RemoteRepository(SubmissionConfiguration config, SubmitterProtocol protocol) throws ServerNotFoundException {
-        this.config = config;
-        this.protocol = protocol;
-        
-        target = ToolSettings.getConfig().getRepositoryURL();
+    public RemoteRepository(String url, String user, char[] password) throws ServerNotFoundException {
         try {
-            svnUrl = SVNURL.parseURIEncoded(target);
+            svnUrl = SVNURL.parseURIEncoded(url);
         } catch (SVNException e) {
-            throw new ServerNotFoundException(target);
+            throw new ServerNotFoundException(url);
         }
         
         clientManager = SVNClientManager.newInstance(null,
-                BasicAuthenticationManager.newInstance(config.getUser(), config.getPW()));
+                BasicAuthenticationManager.newInstance(user, password));
     }
     
     /**
      * Returns the history of the repository.
+     * 
+     * @param remotePath The path on the server to get the history for.
+     * 
      * @return a list of Strings, where each String represents a single version
+     * 
      * @throws SVNException if fetching the history information fails
-     * @throws IOException if writing the files fails.
      */
-    public List<Revision> getHistory() throws SVNException, IOException {
+    public List<Revision> getHistory(String remotePath) throws SVNException {
         List<Revision> result = new ArrayList<Revision>();
         
-        String[] targetPaths = null;
-        try {
-            String remotePath = protocol.getPathToSubmission(config.getExercise()).getAbsolutePathInRepository();
-            targetPaths = new String[] {remotePath};
-        } catch (NetworkException e) {
-            throw new IOException(e);
-        }
-        
-        clientManager.getLogClient().doLog(svnUrl, targetPaths,
+        clientManager.getLogClient().doLog(svnUrl, new String[] {remotePath},
                 SVNRevision.HEAD, SVNRevision.create(0), SVNRevision.HEAD, false, false, Integer.MAX_VALUE,
             (logEntry) -> {
                 result.add(new Revision(logEntry));
@@ -94,6 +80,7 @@ public class RemoteRepository {
     /**
      * Tests if a connection can be established to the specified repository server, which is used as submission server.
      * Tests that the provided credentials are accepted by the server.
+     * 
      * @return <code>true</code> if the submission server can be access with the provided credentials,
      *      <code>false</code> otherwise.
      */
@@ -117,112 +104,63 @@ public class RemoteRepository {
     }
     
     /**
-     * Get a previous version and save it in the given directory.
-     * @param path the path to the directory. Contents will be deleted.
-     * @param revision the revision to replay
-     * @throws SVNException if unable to get revision.
+     * Get the given revision of the given exercise directory and save it in the given directory.
+     * 
+     * @param revision The revision to check out.
+     * @param targetDirectory the path to the directory where to create the checkout. Contents will be deleted.
+     * @param remotePath The path of the submission to replay.
+     * 
+     * @throws SVNException if unable to get the current revision.
      * @throws IOException if writing the files fails.
      */
-    public void replay(String path, long revision) throws SVNException, IOException {
-        File target = new File(path);
-        if (!target.exists()) {
-            target.mkdirs();
-        } else if (target.isDirectory()) {
-            rmdir(target, false);
+    public void replay(long revision, File targetDirectory, String remotePath) throws SVNException, IOException {
+        if (!targetDirectory.exists()) {
+            if (!targetDirectory.mkdirs()) {
+                throw new IOException("Cannot create " + targetDirectory);
+            }
+        } else if (targetDirectory.isDirectory()) {
+            FileUtils.cleanDirectory(targetDirectory);
         } else {
-            target.delete();
-            target.mkdir();
+            throw new IOException(targetDirectory + " is a file");
         }
         
         File tmpDir = Files.createTempDirectory("abgabe").toFile();
         try {
-            clientManager.getUpdateClient().doCheckout(svnUrl, tmpDir,
+            SVNURL url = SVNURL.parseURIEncoded(svnUrl.toString() + "/" + remotePath);
+            clientManager.getUpdateClient().doCheckout(url, tmpDir,
                     SVNRevision.create(revision), SVNRevision.create(revision), SVNDepth.INFINITY, true);
-            tmpDir = new File(tmpDir, config.getExercise().getName());
-            String subFolderName = tmpDir.listFiles()[0].getName();
-            tmpDir = new File(tmpDir, subFolderName);
-            if (!tmpDir.isDirectory()) {
-                throw new IOException("Temp-directory has wrong structure"); // TODO
-            }
-            recursiveCopy(tmpDir, target);
+            
+            FileUtils.copyDirectory(tmpDir, targetDirectory, (file) ->
+                    !file.getName().equals(FolderInitializer.CLASSPATH_FILE_NAME)
+                    && !file.getName().equals(FolderInitializer.PROJECT_FILE_NAME)
+                    && !file.getName().equals(".settings")
+                    && !file.getName().equals(".svn")
+            );
+            
         } finally {
-            rmdir(tmpDir, true);
+            FileUtils.deleteQuietly(tmpDir);
         }
     }
     
     /**
-     * Get the current revision of the exercise selected in the {@link SubmissionConfiguration}
-     * and save it in the given directory.
-     * @param path The path to the directory. Contents will be deleted.
+     * Get the current revision of the given exercise directory and save it in the given directory.
+     * 
+     * @param targetDirectory the path to the directory where to create the checkout. Contents will be deleted.
+     * @param remotePath The path of the submission to replay.
+     * 
      * @throws SVNException if unable to get the current revision.
      * @throws IOException if writing the files fails.
      */
-    public void replay(String path) throws SVNException, IOException {
-        String[] targetPaths = null;
-        try {
-            String remotePath = protocol.getPathToSubmission(config.getExercise()).getAbsolutePathInRepository();
-            targetPaths = new String[]{remotePath};
-        } catch (NetworkException e) {
-            throw new IOException(e);
-        }
-        
+    public void replay(File targetDirectory, String remotePath) throws SVNException, IOException {
         AtomicLong latestRevision = new AtomicLong();
         
-        clientManager.getLogClient().doLog(svnUrl, targetPaths,
+        clientManager.getLogClient().doLog(svnUrl, new String[] {remotePath},
                 SVNRevision.HEAD, SVNRevision.HEAD, SVNRevision.HEAD, false, false, Integer.MAX_VALUE,
             (logEntry) -> {
                 latestRevision.set(logEntry.getRevision());
             });
         
-        replay(path, latestRevision.get());
-    }
-    
-    /**
-     * Deletes a given directory and all contained files and directories.
-     * 
-     * @param dir the directory to be deleted
-     * @param self <code>true</code> if also <code>dir</code> should 
-     *        be deleted, or only the contents (<code>false</code>)
-     *
-     * @since 1.00
-     */
-    private static void rmdir(File dir, boolean self) {
-        File[] filelist = dir.listFiles();
-        if (null != filelist) {
-            for (File file : filelist) {
-                if (file.isFile()) {
-                    file.delete();
-                }
-                if (file.isDirectory()) {
-                    rmdir(file.getAbsoluteFile(), true);
-                }
-            }
-        }
-        if (self) {
-            dir.delete();
-        }
-    }
-    
-    /**
-     * Recursively copy contents of the source folder to the destination.
-     * Ignores CLASSPATH_FILE_NAME and PROJECT_FILE_NAME from {@link FolderInitializer} and .settings.
-     * @param src the source directory
-     * @param dst the destination directory
-     * @throws IOException when copying fails
-     */
-    private static void recursiveCopy(File src, File dst) throws IOException {
-        for (File file : src.listFiles()) {
-            if (file.getName().equals(FolderInitializer.CLASSPATH_FILE_NAME)
-                    || file.getName().equals(FolderInitializer.PROJECT_FILE_NAME)
-                    || file.getName().equals(".settings")) {
-                continue;
-            }
-            
-            Files.copy(file.toPath(), dst.toPath().resolve(file.getName()));
-            if (file.isDirectory()) {
-                recursiveCopy(file, new File(dst, file.getName()));
-            }
-        }
+        replay(latestRevision.get(), targetDirectory, remotePath);
     }
     
 }
