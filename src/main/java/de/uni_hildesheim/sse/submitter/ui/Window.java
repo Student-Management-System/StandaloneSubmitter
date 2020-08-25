@@ -80,7 +80,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
         String title = ToolSettings.getConfig().getProgramName();
         String version = ToolSettings.getConfig().getProgramVersion();
         if (null != version) {
-            title += " - v" + version;
+            title += ' ' + version;
         }
         setTitle(title);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
