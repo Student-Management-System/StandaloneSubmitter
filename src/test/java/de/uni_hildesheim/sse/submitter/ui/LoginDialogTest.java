@@ -40,14 +40,14 @@ public class LoginDialogTest {
     }
     
     @Test
-    @DisplayName("has username and password pre-filled")
+    @DisplayName("has username but not password pre-filled")
     public void prefilledData() {
         var nameField = fixture.textBox("nameField");
         var pwField = fixture.textBox("passwordField");
         
         assertAll(
             () -> nameField.requireText("preset User value"),
-            () -> pwField.requireText("preset PW")
+            () -> pwField.requireText("")
         );
     }
     
