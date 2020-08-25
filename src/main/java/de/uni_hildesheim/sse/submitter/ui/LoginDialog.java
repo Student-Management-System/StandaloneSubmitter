@@ -30,6 +30,9 @@ import javax.swing.PopupFactory;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
@@ -47,6 +50,8 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 class LoginDialog extends JDialog implements ActionListener {
 
     private static final long serialVersionUID = 365531812487797101L;
+    
+    private static final Logger LOGGER = LogManager.getLogger();
     
     private SubmissionConfiguration config;
     
@@ -234,14 +239,17 @@ class LoginDialog extends JDialog implements ActionListener {
                                     ToolSettings.getConfig().getCourse().getTeamMail());
                         }
                     } catch (ServerNotFoundException e) {
+                        LOGGER.error("Could not create RemoteRepository", e);
                         errorMessage = I18nProvider.getText("gui.error.server_not_found") + " " + e.getAddress();
                     }
                 } else {
                     errorMessage = I18nProvider.getText("gui.error.unknown_error");
                 }
             } catch (UnknownCredentialsException e) {
+                LOGGER.error("Could not login", e);
                 errorMessage = I18nProvider.getText("gui.error.unknown_credentials");
             } catch (net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException e) {
+                LOGGER.error("Could not login", e);
                 errorMessage = I18nProvider.getText("gui.error.system_unreachable");
                 
             } finally {

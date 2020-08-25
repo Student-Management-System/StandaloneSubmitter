@@ -4,7 +4,8 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import de.uni_hildesheim.sse.submitter.Starter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This class is responsible for creating user texts in different languages. The instance of this class will
@@ -19,6 +20,8 @@ public class I18nProvider {
      * Singleton instance of this class.
      */
     public static final I18nProvider INSTANCE = new I18nProvider();
+    
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private ResourceBundle messages;
     
@@ -48,9 +51,7 @@ public class I18nProvider {
         try {
             result = INSTANCE.messages.getString(key);
         } catch (MissingResourceException e) {
-            if (Starter.DEBUG) {
-                e.printStackTrace();
-            }
+            LOGGER.error("Missing translation key", e);
             result = null;
         }
         

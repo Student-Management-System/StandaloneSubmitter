@@ -1,12 +1,12 @@
 package de.uni_hildesheim.sse.submitter;
 
 import java.io.IOException;
-import java.util.Locale;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.TestSubmitterProtocol;
@@ -20,11 +20,6 @@ import de.uni_hildesheim.sse.submitter.ui.StandaloneSubmitterWindow;
 public class Starter {
     
     /**
-     * General debug mode.
-     */
-    public static final boolean DEBUG = Boolean.getBoolean("submitter.debug");
-    
-    /**
      * Disable management submission. Will emulate a submission for Testblatt01Aufgabe01/JP001.
      * See {@link TestSubmitterProtocol}.
      */
@@ -35,6 +30,8 @@ public class Starter {
      * different errors and warnings. See SubmissionThread.createMockErrors().
      */
     public static final boolean DEBUG_NO_SUBMISSION = Boolean.getBoolean("submitter.debug.no_submission");
+
+    private static final Logger LOGGER = LogManager.getLogger();
     
     /**
      * Starts the program.
@@ -44,18 +41,16 @@ public class Starter {
         try {
             ToolSettings.INSTANCE.init();
         } catch (IOException e) {
-            LogManager.getLogger(Starter.class).fatal("Could not load configuration", e);
+            LOGGER.fatal("Could not load configuration", e);
         }
         
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
-            LogManager.getLogger(Starter.class).info("Could not switch UI to native look and feel", e);
+            LOGGER.warn("Could not switch UI to native look and feel", e);
         }
         
-        if (DEBUG) {
-            Locale.setDefault(Locale.GERMANY);
-        }
+        LOGGER.info("Creating main window...");
         new StandaloneSubmitterWindow();
     }
 

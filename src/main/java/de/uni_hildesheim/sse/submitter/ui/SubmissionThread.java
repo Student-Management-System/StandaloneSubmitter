@@ -3,6 +3,8 @@ package de.uni_hildesheim.sse.submitter.ui;
 import java.io.File;
 import java.util.Date;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
@@ -27,6 +29,8 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  */
 class SubmissionThread extends Thread {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    
     private StandaloneSubmitterWindow parent;
     private SubmissionConfiguration config;
     private SubmitterProtocol protocol;
@@ -71,6 +75,7 @@ class SubmissionThread extends Thread {
                 }
                 
             } catch (NetworkException e) {
+                LOGGER.error("Couldn't get submission path", e);
                 resultHandler.handleCommitException(
                         new SubmitException(ErrorType.COULD_NOT_QUERY_MANAGEMENT_SYSTEM, exerciseToSubmit.getName()),
                         null, null);

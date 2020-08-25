@@ -14,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNException;
 
-import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
@@ -35,7 +34,7 @@ class ButtonListener implements ActionListener {
     static final String ACTION_BROWSE_FOLDER = "Browse";
     static final String ACTION_REVIEW        = "Review";
     
-    private static final Logger LOGGER = LogManager.getLogger(ButtonListener.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     
     private StandaloneSubmitterWindow parent;
     
@@ -78,9 +77,9 @@ class ButtonListener implements ActionListener {
                     
                     SwingUtilities.invokeLater(() -> parent.showHistory(history));
                 } catch (SVNException | NetworkException e) {
+                    LOGGER.error("Could not get history", e);
                     SwingUtilities.invokeLater(() ->
                         parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error")));
-                    LOGGER.warn("Could not show history.", e);
                 }
                 SwingUtilities.invokeLater(() -> parent.toggleButtons(true));
             }).start();
@@ -100,14 +99,14 @@ class ButtonListener implements ActionListener {
                     }
                     
                 } catch (NetworkException e) {
-                    LOGGER.error("Could not contact student management server after successful login.", e);
+                    LOGGER.error("Could not get assignments in reviewed state", e);
                     // This shouldn't happen here... (since it worked in LoginDialog)
                     parent.showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
                 }
             }
             break;
         default:
-            LOGGER.debug("Unknown action command: {}", evt.getActionCommand());
+            LOGGER.error("Unknown action command: {}", evt.getActionCommand());
             break;
         }
     }
@@ -131,6 +130,7 @@ class ButtonListener implements ActionListener {
                 try {
                     new ReplayDialog(parent);
                 } catch (SVNException | NetworkException e) {
+                    LOGGER.error("Could not get histroy for ReplayDialog", e);
                     parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error"));
                 } finally {
                     parent.toggleButtons(true);
@@ -158,9 +158,7 @@ class ButtonListener implements ActionListener {
         case JFileChooser.ERROR_OPTION:
             break;
         default:
-            if (Starter.DEBUG) {
-                System.err.println("Unexpected result from JFileChooser: " + result);
-            }
+            LOGGER.error("Unexpected result from JFileChooser: {}", result);
             break;
         }
     }

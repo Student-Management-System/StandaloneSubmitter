@@ -47,7 +47,7 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  */
 public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutputHandler {
     
-    private static final Logger LOGGER = LogManager.getLogger(StandaloneSubmitterWindow.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * serialVersionUID.
@@ -112,15 +112,12 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
         try {
             setAssignmentMenu(protocol.getOpenAssignments());
         } catch (NetworkException e) {
+            LOGGER.error("Could not get open assignments", e);
             // This shouldn't happen here... (since it worked in LoginDialog)
             showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
         }
         if (config.getProjectFolder() != null) {
             setSelectedPath(config.getProjectFolder());
-        }
-        
-        if (Starter.DEBUG) {
-            sourceDirectoryField.setText(new File("example").getAbsolutePath());
         }
     }
     

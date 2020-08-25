@@ -7,6 +7,8 @@ import java.nio.file.attribute.FileAttribute;
 import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNAuthenticationException;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDepth;
@@ -32,6 +34,8 @@ import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
  */
 public class Submitter {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    
     private SVNCommitClient client;
     private SVNUpdateClient updateClient;
     private SVNURL url;
@@ -56,6 +60,7 @@ public class Submitter {
         try {
             this.url = SVNURL.parseURIEncoded(url);
         } catch (SVNException e) {
+            LOGGER.error("Couldn't parse URL: " + url, e);
             throw new SubmitException(ErrorType.NO_REPOSITORY_FOUND, url);
         }
         
@@ -96,6 +101,7 @@ public class Submitter {
             try {
                 clientManager.getWCClient().doAdd(checkoutFolder, true, false, false, SVNDepth.INFINITY, false, false);
             } catch (SVNException e) {
+                LOGGER.error("Couldn't update working copy", e);
                 throw new SubmitException(ErrorType.DO_STATUS_NOT_POSSIBLE, null);
             }
 
@@ -105,12 +111,14 @@ public class Submitter {
                 info = client.doCommit(new File[] {checkoutFolder}, false, commitMsg, null, null, false, false,
                         SVNDepth.INFINITY);
             } catch (SVNAuthenticationException e) {
+                LOGGER.error("Authentication exception while committing", e);
                 throw new SubmitException(ErrorType.CANNOT_COMMIT, url.toString());
             } catch (SVNException e) {
                 SVNErrorMessage errorMsg = e.getErrorMessage();
                 if (errorMsg.hasChildWithErrorCode(SVNErrorCode.REPOS_HOOK_FAILURE)) {
                     info = new SVNCommitInfo(-1, user, new Date(), errorMsg);
                 } else {
+                    LOGGER.error("Exception while committing: ", e);
                     throw new SubmitException(ErrorType.CANNOT_COMMIT, url.toString());
                 }
             }
@@ -139,11 +147,13 @@ public class Submitter {
             checkoutLocation = Files.createTempDirectory(null, new FileAttribute<?>[] {}).toFile();
             checkoutLocation.deleteOnExit();
         } catch (IOException e) {
+            LOGGER.error("Couldn't create temporary directory", e);
             throw new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, System.getProperty("java.io.tmpdir"));
         }
         try {
             updateClient.doCheckout(url, checkoutLocation, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, true);
         } catch (SVNException e) {
+            LOGGER.error("Couldn't checkout SVN URL " + url, e);
             throw new SubmitException(ErrorType.NO_EXERCISE_FOUND, url.toString());
         }
         
@@ -165,6 +175,7 @@ public class Submitter {
             initilizer.init(exerciseName);
             return FileUtils.listFiles(sourceFolder, new String[] {"java"}, true).size();
         } catch (IOException e) {
+            LOGGER.error("Couldn't initalize temporary directory", e);
             throw new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, System.getProperty("java.io.tmpdir"));
         }
     }

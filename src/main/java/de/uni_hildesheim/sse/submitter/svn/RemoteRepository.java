@@ -28,7 +28,7 @@ import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
  */
 public class RemoteRepository {
 
-    private static final Logger LOGGER = LogManager.getLogger(RemoteRepository.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     
     private SVNURL svnUrl;
     private SVNClientManager clientManager;
@@ -46,6 +46,7 @@ public class RemoteRepository {
         try {
             svnUrl = SVNURL.parseURIEncoded(url);
         } catch (SVNException e) {
+            LOGGER.error("Couldn't parse URL: " + url, e);
             throw new ServerNotFoundException(url);
         }
         
@@ -90,7 +91,7 @@ public class RemoteRepository {
             repository.testConnection();
             connected = true;
         } catch (SVNException e) {
-            LOGGER.warn("Could not connect to sumbission server: " + svnUrl, e);
+            LOGGER.error("Could not connect to sumbission server: " + svnUrl, e);
         } finally {
             if (repository != null) {
                 repository.closeSession();

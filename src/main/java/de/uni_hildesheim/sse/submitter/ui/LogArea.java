@@ -24,7 +24,7 @@ import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
  *
  */
 public class LogArea extends JPanel {
-    private static final Logger LOGGER = LogManager.getLogger(LogArea.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final long serialVersionUID = -7516986866802637007L;
     

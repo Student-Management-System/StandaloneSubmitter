@@ -5,6 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 import net.ssehub.exercisesubmitter.protocol.utils.JsonUtils;
 import net.ssehub.studentmgmt.backend_api.JSON;
@@ -18,6 +21,8 @@ import net.ssehub.studentmgmt.backend_api.JSON;
 public class SubmissionConfiguration {
     public static final String CONFIG_FILE_NAME = "submission.conf";
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    
     private static JSON jsonParser = JsonUtils.createParser();
     
     private String user;
@@ -124,7 +129,7 @@ public class SubmissionConfiguration {
             String serialized = jsonParser.serialize(this);
             writer.write(serialized);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Error while saving SubmissionConfiguration", e);
         }
     }
     
@@ -140,7 +145,7 @@ public class SubmissionConfiguration {
                 String content = Files.readString(file.toPath());
                 result = jsonParser.deserialize(content, SubmissionConfiguration.class);
             } catch (IOException e) {
-                // TODO SE: Log
+                LOGGER.error("Error while saving SubmissionConfiguration", e);
             }
         }
         

@@ -1,10 +1,11 @@
 package de.uni_hildesheim.sse.submitter.svn;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 
-import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorParser;
@@ -19,6 +20,8 @@ import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
  * 
  */
 public class SubmissionResultHandler {
+    
+    private static final Logger LOGGER = LogManager.getLogger();
     
     private static final String BLOCKED_BY_PRE_COMMIT_PREFIX
             = "Commit blocked by pre-commit hook (exit code 1) with output:\n";
@@ -117,9 +120,10 @@ public class SubmissionResultHandler {
                 handler.showInfoMessage(I18nProvider.getText("submission.result.success"));
             }
         } else {
+            String errorXml = errorsToString(errorMsg);
             try {
                 ErrorParser parser = new ErrorParser();
-                parser.parse(errorsToString(errorMsg));
+                parser.parse(errorXml);
                 String message;
                 if (errorMsg.getErrorCode().equals(SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED)) {
                     message = I18nProvider.getText("submission.error.errors_found");
@@ -129,9 +133,7 @@ public class SubmissionResultHandler {
                 handler.showInfoMessage(message, parser.getErrors());
                 
             } catch (InvalidErrorMessagesException e) {
-                if (Starter.DEBUG) {
-                    e.printStackTrace();
-                }
+                LOGGER.error("Couldn't parse XML: " + errorXml, e);
                 handler.showErrorMessage(I18nProvider.getText("gui.error.unexpected_error"));
             }
         }
