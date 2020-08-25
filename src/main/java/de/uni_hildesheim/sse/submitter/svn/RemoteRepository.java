@@ -28,9 +28,6 @@ import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
  */
 public class RemoteRepository {
 
-    public static final String MODE_SUBMISSION = "SUBMISSION";
-    public static final String MODE_REPLAY = "REPLAY";
-    
     private static final Logger LOGGER = LogManager.getLogger(RemoteRepository.class);
     
     private SVNURL svnUrl;
