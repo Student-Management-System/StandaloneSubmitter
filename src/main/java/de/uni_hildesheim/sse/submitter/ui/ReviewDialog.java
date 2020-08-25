@@ -31,7 +31,7 @@ class ReviewDialog extends JDialog implements ActionListener {
     
     private JComboBox<Assignment> assessmentsBox;
     
-    private Window parent;
+    private StandaloneSubmitterWindow parent;
     
     /**
      * Creates a {@link ReviewDialog} for the given parent window.
@@ -39,7 +39,7 @@ class ReviewDialog extends JDialog implements ActionListener {
      * @param parent The parent window.
      * @param reviewedAssignments The list of assignments that are reviewed and may be selected in this dialog.
      */
-    ReviewDialog(Window parent, List<Assignment> reviewedAssignments) {
+    ReviewDialog(StandaloneSubmitterWindow parent, List<Assignment> reviewedAssignments) {
         this.parent = parent;
         
         assessmentsBox = new JComboBox<>();

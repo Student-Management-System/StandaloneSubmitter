@@ -33,7 +33,7 @@ class ReplayDialog extends JDialog implements ActionListener {
     
     private static final String CANCEL_COMMAND = "cancel";
     
-    private Window parent;
+    private StandaloneSubmitterWindow parent;
     
     /*
      * GUI-Elements
@@ -47,7 +47,7 @@ class ReplayDialog extends JDialog implements ActionListener {
      * @throws SVNException if unable to get repositories
      * @throws NetworkException if the group name of the current exercise cannot be retrieved.
      */
-    ReplayDialog(Window parent) throws SVNException, NetworkException {
+    ReplayDialog(StandaloneSubmitterWindow parent) throws SVNException, NetworkException {
         this.parent = parent;
         
         JButton okButton = new JButton("Ok");

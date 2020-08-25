@@ -37,14 +37,14 @@ class ButtonListener implements ActionListener {
     
     private static final Logger LOGGER = LogManager.getLogger(ButtonListener.class);
     
-    private Window parent;
+    private StandaloneSubmitterWindow parent;
     
     /**
      * Creates this listener.
      * 
      * @param parent the window which contains the buttons to be listened.
      */
-    ButtonListener(Window parent) {
+    ButtonListener(StandaloneSubmitterWindow parent) {
         this.parent = parent;
     }
     

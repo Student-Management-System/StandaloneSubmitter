@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.TestSubmitterProtocol;
-import de.uni_hildesheim.sse.submitter.ui.Window;
+import de.uni_hildesheim.sse.submitter.ui.StandaloneSubmitterWindow;
 
 /**
  * Entry point for the whole program.
@@ -56,7 +56,7 @@ public class Starter {
         if (DEBUG) {
             Locale.setDefault(Locale.GERMANY);
         }
-        new Window();
+        new StandaloneSubmitterWindow();
     }
 
 }

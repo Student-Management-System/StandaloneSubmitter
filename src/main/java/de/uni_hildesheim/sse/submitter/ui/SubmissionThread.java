@@ -27,7 +27,7 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  */
 class SubmissionThread extends Thread {
 
-    private Window parent;
+    private StandaloneSubmitterWindow parent;
     private SubmissionConfiguration config;
     private SubmitterProtocol protocol;
     private File projectFolder;
@@ -40,7 +40,8 @@ class SubmissionThread extends Thread {
      * @param protocol The network connection to the student management system.
      * @param projectFolder the folder of the project to be submitted.
      */
-    SubmissionThread(Window parent, SubmissionConfiguration config, SubmitterProtocol protocol, File projectFolder) {
+    SubmissionThread(StandaloneSubmitterWindow parent, SubmissionConfiguration config,
+            SubmitterProtocol protocol, File projectFolder) {
         
         this.parent = parent;
         this.config = config;

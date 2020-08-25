@@ -45,9 +45,9 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  * @author Adam Krafczyk
  *
  */
-public class Window extends JFrame implements ISubmissionOutputHandler {
+public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutputHandler {
     
-    private static final Logger LOGGER = LogManager.getLogger(Window.class);
+    private static final Logger LOGGER = LogManager.getLogger(StandaloneSubmitterWindow.class);
 
     /**
      * serialVersionUID.
@@ -75,7 +75,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     /**
      * Sole constructor for this class.
      */
-    public Window() {
+    public StandaloneSubmitterWindow() {
         // Set window properties
         String title = ToolSettings.getConfig().getProgramName();
         String version = ToolSettings.getConfig().getProgramVersion();
