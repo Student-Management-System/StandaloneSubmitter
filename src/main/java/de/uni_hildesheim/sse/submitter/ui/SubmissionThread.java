@@ -10,11 +10,15 @@ import org.tmatesoft.svn.core.SVNErrorMessage;
 import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
+import de.uni_hildesheim.sse.submitter.svn.ErrorType;
 import de.uni_hildesheim.sse.submitter.svn.SubmissionResultHandler;
 import de.uni_hildesheim.sse.submitter.svn.SubmitException;
 import de.uni_hildesheim.sse.submitter.svn.SubmitResult;
 import de.uni_hildesheim.sse.submitter.svn.Submitter;
 import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
+import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmissionTarget;
+import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * A thread to submit a project.
@@ -25,6 +29,7 @@ class SubmissionThread extends Thread {
 
     private Window parent;
     private SubmissionConfiguration config;
+    private SubmitterProtocol protocol;
     private File projectFolder;
     
     /**
@@ -32,12 +37,14 @@ class SubmissionThread extends Thread {
      * 
      * @param parent the window that created this thread.
      * @param config the configuration object (for e.g. name and password).
+     * @param protocol The network connection to the student management system.
      * @param projectFolder the folder of the project to be submitted.
      */
-    SubmissionThread(Window parent, SubmissionConfiguration config, File projectFolder) {
+    SubmissionThread(Window parent, SubmissionConfiguration config, SubmitterProtocol protocol, File projectFolder) {
         
         this.parent = parent;
         this.config = config;
+        this.protocol = protocol;
         this.projectFolder = projectFolder;
     }
     
@@ -49,23 +56,31 @@ class SubmissionThread extends Thread {
         } else {
             SubmissionResultHandler resultHandler = new SubmissionResultHandler(parent);
             
+            Assignment exerciseToSubmit = config.getExercise();
+            SubmissionTarget submissionTarget = null;
+            
             try {
-                Submitter submitter = Submitter.create(config, parent.getNetworkProtocol());
+                submissionTarget = protocol.getPathToSubmission(exerciseToSubmit);
+                Submitter submitter = new Submitter(submissionTarget.getSubmissionURL(), exerciseToSubmit.getName(),
+                        config.getUser(), config.getPW());
                 SubmitResult result = submitter.submitFolder(projectFolder);
                 resultHandler.handleCommitResult(result.getCommitInfo());
                 if (result.getNumJavFiles() <= 0) {
                     parent.showErrorMessage(I18nProvider.getText("submission.error.no_java_files"));
                 }
+                
+            } catch (NetworkException e) {
+                resultHandler.handleCommitException(
+                        new SubmitException(ErrorType.COULD_NOT_QUERY_MANAGEMENT_SYSTEM, exerciseToSubmit.getName()),
+                        null, null);
+                
             } catch (SubmitException e) {
                 String submissionPath = null;
-                try {
-                    submissionPath = parent.getNetworkProtocol()
-                            .getPathToSubmission(config.getExercise()).getSubmissionPath();
-                } catch (NetworkException e2) {
-                    // ignore
+                if (submissionTarget != null) {
+                    submissionPath = submissionTarget.getSubmissionPath();
                 }
+                resultHandler.handleCommitException(e, exerciseToSubmit, submissionPath);
                 
-                resultHandler.handleCommitException(e, config.getExercise(), submissionPath);
             } finally {
                 parent.toggleButtons(true);
             }

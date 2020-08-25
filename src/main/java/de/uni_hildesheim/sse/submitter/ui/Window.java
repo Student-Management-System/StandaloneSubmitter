@@ -148,14 +148,6 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
     }
     
     /**
-     * Returns the network protocol to communicate with the <b>student management system</b> via it's REST interface.
-     * @return The network protocol for the REST server.
-     */
-    public SubmitterProtocol getNetworkProtocol() {
-        return protocol;
-    }
-    
-    /**
      * Creates a button.
      * 
      * @param text the text on the button.
@@ -277,7 +269,7 @@ public class Window extends JFrame implements ISubmissionOutputHandler {
      * @param folder A top level folder for a java project.
      */
     private void submitFolder(File folder) {
-        new SubmissionThread(this, config, folder).start();
+        new SubmissionThread(this, config, protocol, folder).start();
     }
     
     /**

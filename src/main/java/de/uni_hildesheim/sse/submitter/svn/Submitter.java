@@ -23,10 +23,6 @@ import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
-import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * This class is responsible for submitting the whole project.
@@ -78,29 +74,6 @@ public class Submitter {
             }
         });
         updateClient = clientManager.getUpdateClient();
-    }
-    
-    /**
-     * Creates a submitter from the given configuration and student management system connection.
-     * <p>
-     * TODO: refactor this away.
-     * 
-     * @param config The configuration to get the username, password, and current {@link Assignment} from.
-     * @param protocol The protocol to query the student managemetn system for the group name.
-     * 
-     * @return A {@link Submitter} for the given configuration.
-     * 
-     * @throws SubmitException If the student managemen system could not be queried or creating the submitter fails.
-     */
-    public static Submitter create(SubmissionConfiguration config, SubmitterProtocol protocol) throws SubmitException {
-        try {
-            String url = protocol.getPathToSubmission(config.getExercise()).getSubmissionURL();
-            
-            return new Submitter(url, config.getExercise().getName(), config.getUser(), config.getPW());
-            
-        } catch (NetworkException e1) {
-            throw new SubmitException(ErrorType.COULD_NOT_QUERY_MANAGEMENT_SYSTEM, config.getExercise().getName());
-        }
     }
     
     /**
