@@ -4,7 +4,6 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import de.uni_hildesheim.sse.submitter.AbstractPropertiesReader;
 import de.uni_hildesheim.sse.submitter.Starter;
 
 /**
@@ -12,9 +11,9 @@ import de.uni_hildesheim.sse.submitter.Starter;
  * automatically detect the default language of the user and tries to create output texts in this language.
  * 
  * @author El-Sharkawy
- * 
+ * @author Adam
  */
-public class I18nProvider extends AbstractPropertiesReader {
+public class I18nProvider {
 
     /**
      * Singleton instance of this class.
