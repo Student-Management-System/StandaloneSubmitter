@@ -350,7 +350,6 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
      */
     void setSelectedPath(File path) {
         sourceDirectoryField.setText(path.getAbsolutePath());
-        config.setProjectFolder(path);
     }
     
     /**
