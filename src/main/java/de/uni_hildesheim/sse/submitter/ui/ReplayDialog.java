@@ -14,11 +14,8 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.tmatesoft.svn.core.SVNException;
-
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 
 /**
  * A dialog for selecting the version to replay.
@@ -35,6 +32,8 @@ class ReplayDialog extends JDialog implements ActionListener {
     
     private StandaloneSubmitterWindow parent;
     
+    private StandaloneSubmitter model;
+    
     /*
      * GUI-Elements
      */
@@ -43,12 +42,13 @@ class ReplayDialog extends JDialog implements ActionListener {
     
     /**
      * Creates a {@link ReplayDialog} with the given parent.
+     * 
      * @param parent the parent window
-     * @throws SVNException if unable to get repositories
-     * @throws NetworkException if the group name of the current exercise cannot be retrieved.
+     * @param model the model.
      */
-    ReplayDialog(StandaloneSubmitterWindow parent) throws SVNException, NetworkException {
+    ReplayDialog(StandaloneSubmitterWindow parent, StandaloneSubmitter model) {
         this.parent = parent;
+        this.model = model;
         
         JButton okButton = new JButton("Ok");
         okButton.setActionCommand(OK_COMMAND);
@@ -63,7 +63,10 @@ class ReplayDialog extends JDialog implements ActionListener {
         bottomPanel.add(okButton);
         bottomPanel.add(cancelButton);
         
-        revisions = parent.getRemoteRepository().getHistory(parent.getRemotePathOfCurrentExercise());
+        revisions = model.getHistoryOfCurrentExercise();
+        if (revisions == null) {
+            return;
+        }
         DefaultListModel<String> listModel = new DefaultListModel<String>();
         for (int i = 0; i < revisions.size(); i++) {
             listModel.add(i, revisions.get(i).toString());
@@ -89,7 +92,9 @@ class ReplayDialog extends JDialog implements ActionListener {
             dispose();
         } else if (evt.getActionCommand().equals(OK_COMMAND) && !list.isSelectionEmpty()) {
             long revision = revisions.get(list.getSelectedIndex()).getRevision();
-            parent.replayRevision(revision);
+            parent.clearLog();
+            parent.showInfoMessage(I18nProvider.getText("gui.log.replaying"));
+            model.replaySubmission(revision);
             dispose();
         }
     }

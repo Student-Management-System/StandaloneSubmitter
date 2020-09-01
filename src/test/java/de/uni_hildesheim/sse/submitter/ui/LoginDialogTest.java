@@ -31,6 +31,8 @@ public class LoginDialogTest {
     
     private DialogFixture fixture;
     
+    private StandaloneSubmitter model;
+    
     private boolean throwServerNotFound;
     
     @Test
@@ -146,19 +148,17 @@ public class LoginDialogTest {
         loginButton.click();
         Thread.sleep(1000);
         
-        LoginDialog dialog = (LoginDialog) fixture.target();
-        
         assertAll(
             () -> errorMessage.requireText(""),
             () -> assertFalse(fixture.target().isVisible(), "dialog should be closed"),
-            () -> assertNotNull(dialog.getRepository(), "should have created repository instance")
+            () -> assertNotNull(model.getSvnRepository(), "should have created repository instance")
         );
     }
     
-    
     @BeforeEach
     public void createDialogFixture() {
-        LoginDialog dialog = GuiActionRunner.execute(() -> new LoginDialog(null, new TestConfiguration(), new TestProtocol()));
+        this.model = new StandaloneSubmitter(new TestConfiguration(), new TestProtocol());
+        LoginDialog dialog = GuiActionRunner.execute(() -> new LoginDialog(null, model));
         fixture = new DialogFixture(dialog);
         fixture.show();
     }

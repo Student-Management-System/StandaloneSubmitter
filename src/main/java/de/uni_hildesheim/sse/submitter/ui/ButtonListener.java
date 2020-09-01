@@ -12,11 +12,9 @@ import javax.swing.SwingUtilities;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.tmatesoft.svn.core.SVNException;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 
 /**
@@ -38,13 +36,17 @@ class ButtonListener implements ActionListener {
     
     private StandaloneSubmitterWindow parent;
     
+    private StandaloneSubmitter model;
+    
     /**
      * Creates this listener.
      * 
      * @param parent the window which contains the buttons to be listened.
+     * @param model The standalone submitter model.
      */
-    ButtonListener(StandaloneSubmitterWindow parent) {
+    ButtonListener(StandaloneSubmitterWindow parent, StandaloneSubmitter model) {
         this.parent = parent;
+        this.model = model;
     }
     
     @Override
@@ -60,7 +62,14 @@ class ButtonListener implements ActionListener {
         case ACTION_SUBMIT:
             parent.toggleButtons(false);
             parent.addProgressAnimator((JButton) evt.getSource());
-            parent.submit();
+            parent.clearLog();
+            parent.showInfoMessage(I18nProvider.getText("gui.log.submitting"));
+            
+            new Thread(() -> {
+                model.submit();
+                SwingUtilities.invokeLater(() -> parent.toggleButtons(true));
+            }).start();
+            
             break;
         case ACTION_REPLAY:
             openReplayDialog(evt);
@@ -71,15 +80,9 @@ class ButtonListener implements ActionListener {
             parent.addProgressAnimator((JButton) evt.getSource());
             
             new Thread(() -> {
-                try {
-                    List<Revision> history = parent.getRemoteRepository()
-                            .getHistory(parent.getRemotePathOfCurrentExercise());
-                    
+                List<Revision> history = model.getHistoryOfCurrentExercise();
+                if (history != null) {
                     SwingUtilities.invokeLater(() -> parent.showHistory(history));
-                } catch (SVNException | NetworkException e) {
-                    LOGGER.error("Could not get history", e);
-                    SwingUtilities.invokeLater(() ->
-                        parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error")));
                 }
                 SwingUtilities.invokeLater(() -> parent.toggleButtons(true));
             }).start();
@@ -87,22 +90,16 @@ class ButtonListener implements ActionListener {
             break;
         case ACTION_REVIEW:
             parent.clearLog();
-            if (parent.getSelectedPath().trim().isEmpty()) {
+            if (model.getDirectoryToSubmit() == null) { // TODO
                 parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
             } else {
-                try {
-                    List<Assignment> assignments = parent.getAssignmentsInReviewedState();
-                    if (assignments.size() == 0) {
-                        parent.showInfoMessage(I18nProvider.getText("gui.error.no_review_repos"));
-                    } else {
-                        new ReviewDialog(parent, assignments);
-                    }
-                    
-                } catch (NetworkException e) {
-                    LOGGER.error("Could not get assignments in reviewed state", e);
-                    // This shouldn't happen here... (since it worked in LoginDialog)
-                    parent.showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
+                List<Assignment> assignments = model.getAssignmentsInReviewedState();
+                if (assignments == null || assignments.size() == 0) {
+                    parent.showInfoMessage(I18nProvider.getText("gui.error.no_review_repos"));
+                } else {
+                    new ReviewDialog(parent, model, assignments);
                 }
+                    
             }
             break;
         default:
@@ -118,7 +115,7 @@ class ButtonListener implements ActionListener {
      */
     private void openReplayDialog(ActionEvent evt) {
         parent.clearLog();
-        if (parent.getSelectedPath().trim().isEmpty()) {
+        if (model.getDirectoryToSubmit() == null) { // TODO
             parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
         } else {
             parent.toggleButtons(false);
@@ -127,14 +124,8 @@ class ButtonListener implements ActionListener {
                     I18nProvider.getText("gui.elements.replay"), JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
-                try {
-                    new ReplayDialog(parent);
-                } catch (SVNException | NetworkException e) {
-                    LOGGER.error("Could not get histroy for ReplayDialog", e);
-                    parent.showErrorMessage(I18nProvider.getText("gui.error.unknown_error"));
-                } finally {
-                    parent.toggleButtons(true);
-                }
+                new ReplayDialog(parent, model);
+                parent.toggleButtons(true);
             } else {
                 parent.toggleButtons(true);
             }
@@ -145,13 +136,13 @@ class ButtonListener implements ActionListener {
      * Creates and handles a FileChooser to select a local folder for submission / replaying.
      */
     private void createFolderChooser() {
-        JFileChooser fileChooser = new JFileChooser(parent.getSelectedPath());
+        JFileChooser fileChooser = new JFileChooser(model.getDirectoryToSubmit());
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int result = fileChooser.showOpenDialog(parent);
         switch (result) {
         case JFileChooser.APPROVE_OPTION:
             File projectFolder = fileChooser.getSelectedFile().getAbsoluteFile();
-            parent.setSelectedPath(projectFolder);
+            model.setDirectoryToSubmit(projectFolder);
             break;
         case JFileChooser.CANCEL_OPTION:
             break;

@@ -34,12 +34,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
-import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.ServerNotFoundException;
 import net.ssehub.exercisesubmitter.protocol.backend.UnknownCredentialsException;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * A dialog where group name, name and password can be specified.
@@ -47,16 +44,14 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
  * @author Adam Krafczyk
  * @author El-Sharkawy
  */
-class LoginDialog extends JDialog implements ActionListener {
+public class LoginDialog extends JDialog implements ActionListener {
 
     private static final long serialVersionUID = 365531812487797101L;
     
     private static final Logger LOGGER = LogManager.getLogger();
     
-    private SubmissionConfiguration config;
+    private StandaloneSubmitter model;
     
-    private RemoteRepository repository;
-    private SubmitterProtocol protocol;
     private JFrame parent;
     
     /*
@@ -72,13 +67,11 @@ class LoginDialog extends JDialog implements ActionListener {
      * Creates this dialog for the given parent.
      * 
      * @param parent The parent window, may be <code>null</code>.
-     * @param config The submission configuration.
-     * @param protocol The network connection to the management system.
+     * @param model The model.
      */
-    LoginDialog(JFrame parent, SubmissionConfiguration config, SubmitterProtocol protocol) {
+    public LoginDialog(JFrame parent, StandaloneSubmitter model) {
         this.parent = parent;
-        this.config = config;
-        this.protocol = protocol;
+        this.model = model;
         
         // Initialize components
         initUserComponents();
@@ -163,7 +156,7 @@ class LoginDialog extends JDialog implements ActionListener {
         loginButton.setName("loginButton");
         loginButton.addActionListener(this);
         
-        nameField = new JTextField(config.getUser(), 10);
+        nameField = new JTextField(model.getUser(), 10);
         nameField.setName("nameField");
         nameField.addActionListener(this);
         
@@ -202,20 +195,12 @@ class LoginDialog extends JDialog implements ActionListener {
         errorMessageLabel.setForeground(Color.RED);
     }
     
-    /**
-     * Returns the {@link RemoteRepository}.
-     * @return the {@link RemoteRepository}
-     */
-    RemoteRepository getRepository() {
-        return repository;
-    }
-    
     @Override
     public void actionPerformed(ActionEvent evt) {
         String user = nameField.getText();
         char[] pw = passwordField.getPassword();
-        config.setUser(user);
-        config.setPW(pw);
+        model.setUser(user);
+        model.setPassword(pw);
 
         loginButton.setEnabled(false);
         
@@ -226,14 +211,10 @@ class LoginDialog extends JDialog implements ActionListener {
             String errorMessage = null;
             try {
                 // First check: Check that credentials are supported by REST servers
-                boolean success = protocol.login(user, new String(pw));
-                if (success) {
+                if (model.logIntoStudentManagementSystem()) {
                     try {
-                        repository = new RemoteRepository(ToolSettings.getConfig().getRepositoryURL(),
-                                config.getUser(), config.getPW());
-                        // Double check: Check that credentials are also accepted by the submission server
-                        success = repository.checkConnection();
-                        if (!success) {
+                        // Second check: log into the SVN repository
+                        if (!model.createSvnRepository(ToolSettings.getConfig().getRepositoryURL())) {
                             errorMessage = I18nProvider.getText("gui.error.login_wrong_repository",
                                     ToolSettings.getConfig().getCourse().getTeamName(),
                                     ToolSettings.getConfig().getCourse().getTeamMail());

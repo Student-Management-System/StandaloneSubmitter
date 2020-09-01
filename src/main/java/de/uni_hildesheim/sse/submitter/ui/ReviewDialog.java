@@ -12,6 +12,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
@@ -33,14 +34,18 @@ class ReviewDialog extends JDialog implements ActionListener {
     
     private StandaloneSubmitterWindow parent;
     
+    private StandaloneSubmitter model;
+    
     /**
      * Creates a {@link ReviewDialog} for the given parent window.
      * 
      * @param parent The parent window.
+     * @param model The model.
      * @param reviewedAssignments The list of assignments that are reviewed and may be selected in this dialog.
      */
-    ReviewDialog(StandaloneSubmitterWindow parent, List<Assignment> reviewedAssignments) {
+    ReviewDialog(StandaloneSubmitterWindow parent, StandaloneSubmitter model,  List<Assignment> reviewedAssignments) {
         this.parent = parent;
+        this.model = model;
         
         assessmentsBox = new JComboBox<>();
         assessmentsBox.setRenderer(new AssignmentComboxRenderer());
@@ -80,7 +85,25 @@ class ReviewDialog extends JDialog implements ActionListener {
                     I18nProvider.getText("gui.elements.replay"), JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
-                parent.replayCorrection((Assignment) assessmentsBox.getSelectedItem());
+                Assignment previousExercise = model.getSelectedExercise();
+                Assignment exerciseToReplay = (Assignment) assessmentsBox.getSelectedItem();
+                
+                parent.toggleButtons(false);
+                parent.addProgressAnimatorToReviewButton();
+                parent.clearLog();
+                parent.showInfoMessage(I18nProvider.getText("gui.log.replaying"));
+                
+                new Thread(() -> {
+                    model.setSelectedExercise(exerciseToReplay);
+                    model.replayCorrection();
+                    model.setSelectedExercise(previousExercise);
+                    
+                    SwingUtilities.invokeLater(() -> {
+                        parent.toggleButtons(true);
+                    });
+                    
+                }).start();
+                
             }
         }
     }

@@ -6,7 +6,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -20,35 +19,21 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.tmatesoft.svn.core.SVNException;
-
-import de.uni_hildesheim.sse.submitter.Starter;
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
-import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
-import de.uni_hildesheim.sse.submitter.settings.ToolConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.settings.UiColorSettings;
 import de.uni_hildesheim.sse.submitter.svn.ISubmissionOutputHandler;
-import de.uni_hildesheim.sse.submitter.svn.RemoteRepository;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
-import de.uni_hildesheim.sse.submitter.svn.TestSubmitterProtocol;
 import de.uni_hildesheim.sse.submitter.svn.hookErrors.ErrorDescription;
-import net.ssehub.exercisesubmitter.protocol.backend.NetworkException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmissionTarget;
-import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 /**
  * Main window for the submitter.
+ * 
  * @author Adam Krafczyk
- *
  */
 public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutputHandler {
     
-    private static final Logger LOGGER = LogManager.getLogger();
-
     /**
      * serialVersionUID.
      */
@@ -68,14 +53,21 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
     
     private ButtonProgressAnimator progressAnimator;
     
-    private SubmissionConfiguration config;
-    private RemoteRepository repository;
-    private SubmitterProtocol protocol;
-
+    private StandaloneSubmitter model;
+    
     /**
      * Sole constructor for this class.
+     * 
+     * @param model The {@link StandaloneSubmitter} to use.
      */
-    public StandaloneSubmitterWindow() {
+    public StandaloneSubmitterWindow(StandaloneSubmitter model) {
+        this.model = model;
+        this.model.setOutputHandler(this);
+        
+        // Initialize components
+        initComponents();
+        createLayout();
+        
         // Set window properties
         String title = ToolSettings.getConfig().getProgramName();
         String version = ToolSettings.getConfig().getProgramVersion();
@@ -85,63 +77,25 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
         setTitle(title);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(600, 500);
-        ToolConfiguration tConf = ToolSettings.getConfig();
-        if (Starter.DEBUG_NO_MGMT_SYTEM) {
-            protocol = new TestSubmitterProtocol(tConf.getAuthURL(), tConf.getMgmtURL(), tConf.getCourse().getCourse(),
-                    tConf.getRepositoryURL());
-        } else {
-            protocol = new SubmitterProtocol(tConf.getAuthURL(), tConf.getMgmtURL(), tConf.getCourse().getCourse(),
-                    tConf.getRepositoryURL());
-        }
-        String semester = tConf.getCourse().getSemester();
-        if (null != semester) {
-            protocol.setSemester(semester);
-        }
-        
-        // Initialize components
-        initComponents();
-        createLayout();
         
         setVisible(true);
         setLocationRelativeTo(null);
         
-        config = SubmissionConfiguration.load();
-        LoginDialog dialog = new LoginDialog(this, config, protocol);
-        dialog.setVisible(true);
-        repository = dialog.getRepository();
-        try {
-            setAssignmentMenu(protocol.getOpenAssignments());
-        } catch (NetworkException e) {
-            LOGGER.error("Could not get open assignments", e);
-            // This shouldn't happen here... (since it worked in LoginDialog)
-            showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
-        }
-        if (config.getProjectFolder() != null) {
-            setSelectedPath(config.getProjectFolder());
-        }
+        setAssignmentMenu(this.model.getOpenAssignments());
     }
     
     /**
-     * Returns the path for the remote SVN repository of the currently selected exercise.
-     * 
-     * @return The remote path of the current exercise.
-     * 
-     * @throws NetworkException If the group name could not be queried from the student management system.
+     * Call this after the {@link StandaloneSubmitter} has been initialized with login data.
      */
-    public String getRemotePathOfCurrentExercise() throws NetworkException {
-        Assignment currentExercise = config.getExercise();
-        return protocol.getPathToSubmission(currentExercise).getAbsolutePathInRepository();
-    }
-    
-    /**
-     * Returns a list of {@link Assignment}s that are currently in the reviewed state.
-     * 
-     * @return List of {@link Assignment}s that were reviewed.
-     * 
-     * @throws NetworkException If fetching the list fails.
-     */
-    public List<Assignment> getAssignmentsInReviewedState() throws NetworkException {
-        return protocol.getReviewedAssignments();
+    public void afterLogin() {
+        List<Assignment> openAssignments = this.model.getOpenAssignments();
+        if (openAssignments != null) {
+            setAssignmentMenu(openAssignments);
+        }
+        
+        if (this.model.getDirectoryToSubmit() != null) {
+            this.sourceDirectoryField.setText(model.getDirectoryToSubmit().getAbsolutePath());
+        }
     }
     
     /**
@@ -168,31 +122,38 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
         assignmentBox.removeAllItems();
         assignments.stream()
             .forEach(a -> assignmentBox.addItem(a));
-        config.setExercise((Assignment) assignmentBox.getSelectedItem());
+        model.setSelectedExercise((Assignment) assignmentBox.getSelectedItem());
     }
     
     /**
      * Creates components that are stored as class attributes.
      */
     private void initComponents() {
-        ButtonListener listener = new ButtonListener(this);
+        ButtonListener listener = new ButtonListener(this, this.model);
         
         sourceDirectoryField = new JTextField();
         sourceDirectoryField.getDocument().addDocumentListener(new DocumentListener() {
             
+            /**
+             * Called for all changes on the textfield.
+             */
+            private void onChange() {
+                model.setDirectoryToSubmit(new File(sourceDirectoryField.getText()));
+            }
+            
             @Override
             public void removeUpdate(DocumentEvent evt) {
-                config.setProjectFolder(new File(sourceDirectoryField.getText()));
+                onChange();
             }
             
             @Override
             public void insertUpdate(DocumentEvent evt) {
-                config.setProjectFolder(new File(sourceDirectoryField.getText()));
+                onChange();
             }
             
             @Override
             public void changedUpdate(DocumentEvent evt) {
-                config.setProjectFolder(new File(sourceDirectoryField.getText()));
+                onChange();
             }
             
         });
@@ -204,7 +165,7 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
         assignmentBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent evt) {
-                config.setExercise((Assignment) assignmentBox.getSelectedItem());
+                model.setSelectedExercise((Assignment) assignmentBox.getSelectedItem());
             }
         });
         
@@ -261,15 +222,6 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
     }
 
     /**
-     * Tries to submit the specified folder to the submission server.
-     * Handles returned error messages.
-     * @param folder A top level folder for a java project.
-     */
-    private void submitFolder(File folder) {
-        new SubmissionThread(this, config, protocol, folder).start();
-    }
-    
-    /**
      * Toggles whether the buttons are click-able or not.
      * @param enabled <code>true</code> when the buttons should become enabled
      */
@@ -300,28 +252,10 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
     }
     
     /**
-     * Returns the currently selected source-path. May not exist.
-     * 
-     * @return the path as String.
+     * Calls {@link #addProgressAnimator(JButton)} with the review button.
      */
-    String getSelectedPath() {
-        return sourceDirectoryField.getText();
-    }
-    
-    /**
-     * Submits the selected project.
-     */
-    void submit() {
-        clearLog();
-        showInfoMessage(I18nProvider.getText("gui.log.submitting"));
-        File projectFolder = new File(sourceDirectoryField.getText());
-        if (projectFolder.isDirectory()) {
-            submitFolder(projectFolder);
-        } else {
-            showErrorMessage(sourceDirectoryField.getText() + " "
-                    + I18nProvider.getText("errors.messages.not_a_direcotry"));
-            toggleButtons(true);
-        }
+    void addProgressAnimatorToReviewButton() {
+        addProgressAnimator(reviewBtn);
     }
     
     /**
@@ -344,87 +278,6 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
     }
     
     /**
-     * Sets the currently selected source-path.
-     * 
-     * @param path the new path.
-     */
-    void setSelectedPath(File path) {
-        sourceDirectoryField.setText(path.getAbsolutePath());
-    }
-    
-    /**
-     * Getter for the {@link RemoteRepository}.
-     * @return the {@link RemoteRepository}
-     */
-    RemoteRepository getRemoteRepository() {
-        return repository;
-    }
-    
-    /**
-     * Replay to a selected revision.
-     * @param revision the revision to replay
-     */
-    void replayRevision(long revision) {
-        clearLog();
-        showInfoMessage(I18nProvider.getText("gui.log.replaying"));
-        try {
-            getRemoteRepository().replay(revision, new File(getSelectedPath()), getRemotePathOfCurrentExercise());
-            showInfoMessage(I18nProvider.getText("gui.log.replaying_successful"));
-        } catch (SVNException | IOException | NetworkException e) {
-            LOGGER.error("Could not replay submission from server", e);
-            showErrorMessage(I18nProvider.getText("gui.error.replay_error"));
-        }
-    }
-    
-    /**
-     * Replays a corrected exercise.
-     * @param assignment The corrected assignment (exercise / exam) to replay.
-     */
-    void replayCorrection(Assignment assignment) {
-        toggleButtons(false);
-        addProgressAnimator(reviewBtn);
-        clearLog();
-        
-        config.setExercise(assignment);
-        
-        showInfoMessage(I18nProvider.getText("gui.log.replaying"));
-        
-        new Thread(() -> {
-            try {
-                getRemoteRepository().replay(new File(getSelectedPath()), getRemotePathOfCurrentExercise());
-                config.setExercise((Assignment) assignmentBox.getSelectedItem());
-                
-                SwingUtilities.invokeLater(() -> {
-                    showInfoMessage(I18nProvider.getText("gui.log.replaying_successful"));
-                    toggleButtons(true);
-                });
-                
-            } catch (SVNException e) {
-                if (e.getMessage().contains("404 Not Found")) {
-                    try {
-                        SubmissionTarget dest = protocol.getPathToSubmission(assignment);
-                        SwingUtilities.invokeLater(() ->
-                            showErrorMessage(I18nProvider.getText("gui.error.replay.no_submission_error",
-                                dest.getAssignmentName(), dest.getSubmissionPath(),
-                                ToolSettings.getConfig().getCourse().getTeamMail())));
-                    } catch (NetworkException e1) {
-                        LOGGER.error("Could not replay submission from server", e);
-                        SwingUtilities.invokeLater(() ->
-                            showErrorMessage(I18nProvider.getText("gui.error.replay_error")));
-                    }
-                } else {
-                    LOGGER.error("Could not replay submission from server", e);
-                    SwingUtilities.invokeLater(() -> showErrorMessage(I18nProvider.getText("gui.error.replay_error")));
-                }
-            } catch (IOException | NetworkException e) {
-                LOGGER.error("Could not replay submission from server", e);
-                
-                SwingUtilities.invokeLater(() -> showErrorMessage(I18nProvider.getText("gui.error.replay_error")));
-            }
-        }).start();
-    }
-
-    /**
      * Short hand method to retrieve the color settings for the application.
      * @return The color settings of the tool.
      */
@@ -434,56 +287,62 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
     
     @Override
     public void showErrorMessage(String message) {
-        logArea.append(I18nProvider.getText("errors.messages.error") + ": " + message,
-            colors().getErrorColor(), true);
+        SwingUtilities.invokeLater(() -> {
+            logArea.append(I18nProvider.getText("errors.messages.error") + ": " + message,
+                    colors().getErrorColor(), true);
+        });
     }
 
     @Override
     public void showInfoMessage(String message) {
-        logArea.append(message);
-        logArea.append("\n");
+        SwingUtilities.invokeLater(() -> {
+            logArea.append(message);
+            logArea.append("\n");
+        });
     }
 
     @Override
     public void showInfoMessage(String message, ErrorDescription[] descriptions) {
-        logArea.append(message);
-        logArea.append("\n");
-        for (ErrorDescription description : descriptions) {
-            if (null != description.getTool()) {
-                
-                logArea.append(I18nProvider.getText("gui.tool." + description.getTool().getToolName()) + " ",
-                        colors().getColor(description.getTool()), true);
-                
-            }
-            if (null != description.getSeverity()) {
-                switch (description.getSeverity()) {
-                case ERROR:
-                    logArea.append(I18nProvider.getText("gui.log.error_in") + " ",
-                        colors().getErrorColor(), false);
-                    break;
-                case WARNING:
-                    logArea.append(I18nProvider.getText("gui.log.warning_in") + " ",
-                        colors().getWarningColor(), false);
-                    break;
-                default:
-                    logArea.append(I18nProvider.getText("gui.log.prolem_in") + " ");
-                    break;
+        SwingUtilities.invokeLater(() -> {
+            logArea.append(message);
+            logArea.append("\n");
+            for (ErrorDescription description : descriptions) {
+                if (null != description.getTool()) {
+                    
+                    logArea.append(I18nProvider.getText("gui.tool." + description.getTool().getToolName()) + " ",
+                            colors().getColor(description.getTool()), true);
+                    
+                }
+                if (null != description.getSeverity()) {
+                    switch (description.getSeverity()) {
+                    case ERROR:
+                        logArea.append(I18nProvider.getText("gui.log.error_in") + " ",
+                                colors().getErrorColor(), false);
+                        break;
+                    case WARNING:
+                        logArea.append(I18nProvider.getText("gui.log.warning_in") + " ",
+                                colors().getWarningColor(), false);
+                        break;
+                    default:
+                        logArea.append(I18nProvider.getText("gui.log.prolem_in") + " ");
+                        break;
+                    }
+                }
+                if (null != description.getFile()) {
+                    logArea.append(description.getFile() + " ");
+                } else {
+                    logArea.append(I18nProvider.getText("gui.log.unspecified_files") + " ");
+                }
+                if (description.getLine() > 0) {
+                    logArea.append(I18nProvider.getText("gui.log.line", description.getLine()) + ":");
+                }
+                logArea.append("\n");
+                if (null != description.getMessage()) {
+                    logArea.append(" -> " + I18nProvider.getText("gui.log.cause") + ": " + description.getMessage());
+                    logArea.append("\n");
                 }
             }
-            if (null != description.getFile()) {
-                logArea.append(description.getFile() + " ");
-            } else {
-                logArea.append(I18nProvider.getText("gui.log.unspecified_files") + " ");
-            }
-            if (description.getLine() > 0) {
-                logArea.append(I18nProvider.getText("gui.log.line", description.getLine()) + ":");
-            }
-            logArea.append("\n");
-            if (null != description.getMessage()) {
-                logArea.append(" -> " + I18nProvider.getText("gui.log.cause") + ": " + description.getMessage());
-                logArea.append("\n");
-            }
-        }
+        });
     }
-
+    
 }
