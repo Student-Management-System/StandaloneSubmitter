@@ -265,7 +265,14 @@ public class StandaloneSubmitter {
      * @see #setOutputHandler(ISubmissionOutputHandler)
      */
     public void submit() {
-        if (submissionConfiguration.getProjectFolder().isDirectory()) {
+        if (submissionConfiguration.getProjectFolder() == null) {
+            outputHandler.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
+            
+        } else if (!submissionConfiguration.getProjectFolder().isDirectory()) {
+            outputHandler.showErrorMessage(I18nProvider.getText("errors.messages.not_a_direcotry",
+                    submissionConfiguration.getProjectFolder().getAbsolutePath()));
+            
+        } else {
             SubmissionResultHandler resultHandler = new SubmissionResultHandler(outputHandler);
             
             Assignment exerciseToSubmit = submissionConfiguration.getExercise();
@@ -294,9 +301,6 @@ public class StandaloneSubmitter {
                 }
                 resultHandler.handleCommitException(e, exerciseToSubmit, submissionPath);
             }
-        } else {
-            outputHandler.showErrorMessage(I18nProvider.getText("errors.messages.not_a_direcotry",
-                    submissionConfiguration.getProjectFolder().getAbsolutePath()));
         }
     }
     
