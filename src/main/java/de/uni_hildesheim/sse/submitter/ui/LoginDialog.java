@@ -70,6 +70,7 @@ public class LoginDialog extends JDialog implements ActionListener {
      * @param model The model.
      */
     public LoginDialog(JFrame parent, StandaloneSubmitter model) {
+        super(parent);
         this.parent = parent;
         this.model = model;
         

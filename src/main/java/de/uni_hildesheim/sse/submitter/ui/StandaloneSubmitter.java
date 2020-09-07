@@ -42,6 +42,8 @@ public class StandaloneSubmitter {
     
     private RemoteRepository svnRepository;
     
+    private boolean loggedIn;
+    
     private ISubmissionOutputHandler outputHandler;
 
     /**
@@ -152,8 +154,21 @@ public class StandaloneSubmitter {
      */
     public boolean logIntoStudentManagementSystem() throws UnknownCredentialsException,
             net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException {
-        return managementSystem.login(this.submissionConfiguration.getUser(),
+        this.loggedIn = false;
+        this.loggedIn = managementSystem.login(this.submissionConfiguration.getUser(),
                 new String(this.submissionConfiguration.getPW()));
+        return this.loggedIn;
+    }
+    
+    /**
+     * Returns whether logged into the student management system.
+     * 
+     * @return Whether the last login succeeded.
+     * 
+     * @see #logIntoStudentManagementSystem()
+     */
+    public boolean isLoggedIn() {
+        return loggedIn;
     }
     
     /**

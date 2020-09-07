@@ -80,21 +80,21 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
         
         setVisible(true);
         setLocationRelativeTo(null);
-        
-        setAssignmentMenu(this.model.getOpenAssignments());
     }
     
     /**
      * Call this after the {@link StandaloneSubmitter} has been initialized with login data.
      */
     public void afterLogin() {
-        List<Assignment> openAssignments = this.model.getOpenAssignments();
-        if (openAssignments != null) {
-            setAssignmentMenu(openAssignments);
-        }
-        
-        if (this.model.getDirectoryToSubmit() != null) {
-            this.sourceDirectoryField.setText(model.getDirectoryToSubmit().getAbsolutePath());
+        if (this.model.isLoggedIn()) {
+            List<Assignment> openAssignments = this.model.getOpenAssignments();
+            if (openAssignments != null) {
+                setAssignmentMenu(openAssignments);
+            }
+            
+            if (this.model.getDirectoryToSubmit() != null) {
+                this.sourceDirectoryField.setText(model.getDirectoryToSubmit().getAbsolutePath());
+            }
         }
     }
     
