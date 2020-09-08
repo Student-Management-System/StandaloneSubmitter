@@ -22,6 +22,8 @@ public class ToolConfiguration {
     
     private UiColorSettings colorSettings;
     
+    private FolderCheckSettings folderCheckSettings;
+    
     /**
      * Returns the name of the application.
      * @return the application.
@@ -149,4 +151,25 @@ public class ToolConfiguration {
     public void setCourse(CourseSettings course) {
         this.course = course;
     }
+
+    /**
+     * Settings for checks to perform on a submission folder.
+     * 
+     * @return the folderCheckSettings
+     */
+    public FolderCheckSettings getFolderCheckSettings() {
+        return folderCheckSettings;
+    }
+
+    /**
+     * Settings for checks to perform on a submission folder.
+     * 
+     * @param folderCheckSettings the folderCheckSettings to set
+     */
+    public void setFolderCheckSettings(FolderCheckSettings folderCheckSettings) {
+        this.folderCheckSettings = folderCheckSettings;
+    }
+    
+    
+    
 }

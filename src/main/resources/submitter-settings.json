@@ -2,7 +2,7 @@
   "programName": "Exercise Submitter",
   "programVersion": "2.0.0",
 
-  "mgmtURL": "http://147.172.178.137:8080/stmgmt",
+  "mgmtURL": "http://147.172.178.137:3000",
   "authURL": "http://147.172.178.137:8080",
   "course" : {
     "course" : "java",
@@ -19,6 +19,13 @@
     "An internal error occurred while checking eclipse project": "errors.messages.unknownError",
     "An internal error occurred while running javac": "errors.messages.unknownError",
     "An internal error occurred while running Checkstyle": "errors.messages.unknownError"
+  },
+  
+  "folderCheckSettings": {
+    "minJavaFiles": 1,
+    "minFiles": 1,
+    "maxFiles": 30,
+    "maxSize": 1048576
   },
 
   "colorSettings": {

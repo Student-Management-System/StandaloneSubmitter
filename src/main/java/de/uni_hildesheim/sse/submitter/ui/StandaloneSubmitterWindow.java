@@ -32,7 +32,8 @@ import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
  * 
  * @author Adam Krafczyk
  */
-public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutputHandler {
+public class StandaloneSubmitterWindow extends JFrame
+        implements ISubmissionOutputHandler, IStandaloneSubmitterListener {
     
     /**
      * serialVersionUID.
@@ -43,6 +44,7 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
      * GUI elements
      */
     private JTextField sourceDirectoryField;
+    private DocumentListener sourceDirectoryFieldListener;
     private LogArea logArea;
     private JComboBox<Assignment> assignmentBox;
     private JButton submitBtn;
@@ -63,6 +65,7 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
     public StandaloneSubmitterWindow(StandaloneSubmitter model) {
         this.model = model;
         this.model.setOutputHandler(this);
+        this.model.setModelListener(this);
         
         // Initialize components
         initComponents();
@@ -93,7 +96,7 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
             }
             
             if (this.model.getDirectoryToSubmit() != null) {
-                this.sourceDirectoryField.setText(model.getDirectoryToSubmit().getAbsolutePath());
+                updateSourceDirectoryFieldText(model.getDirectoryToSubmit().getAbsolutePath());
             }
         }
     }
@@ -132,7 +135,8 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
         ButtonListener listener = new ButtonListener(this, this.model);
         
         sourceDirectoryField = new JTextField();
-        sourceDirectoryField.getDocument().addDocumentListener(new DocumentListener() {
+        
+        this.sourceDirectoryFieldListener = new DocumentListener() {
             
             /**
              * Called for all changes on the textfield.
@@ -156,7 +160,8 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
                 onChange();
             }
             
-        });
+        };
+        sourceDirectoryField.getDocument().addDocumentListener(sourceDirectoryFieldListener);
         
         logArea = new LogArea();
         assignmentBox = new JComboBox<>();
@@ -222,6 +227,18 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
     }
 
     /**
+     * Sets the text of the {@link #sourceDirectoryField} text field. This method makes that we don't land in an
+     * infinite recursion with the {@link #sourceDirectoryFieldListener}.
+     * 
+     * @param newText The new text content of the text field.
+     */
+    private void updateSourceDirectoryFieldText(String newText) {
+        this.sourceDirectoryField.getDocument().removeDocumentListener(sourceDirectoryFieldListener);
+        this.sourceDirectoryField.setText(newText);
+        this.sourceDirectoryField.getDocument().addDocumentListener(sourceDirectoryFieldListener);
+    }
+    
+    /**
      * Toggles whether the buttons are click-able or not.
      * @param enabled <code>true</code> when the buttons should become enabled
      */
@@ -283,6 +300,13 @@ public class StandaloneSubmitterWindow extends JFrame implements ISubmissionOutp
      */
     private UiColorSettings colors() {
         return ToolSettings.getConfig().getColorSettings();
+    }
+    
+    @Override
+    public void onSubmissionDirectoryChanged(File newFolder) {
+        SwingUtilities.invokeLater(() -> {
+            updateSourceDirectoryFieldText(model.getDirectoryToSubmit().getAbsolutePath());
+        });
     }
     
     @Override

@@ -3,6 +3,7 @@ package de.uni_hildesheim.sse.submitter.ui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -10,10 +11,14 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
+import de.uni_hildesheim.sse.submitter.io.FolderCheck;
+import de.uni_hildesheim.sse.submitter.settings.FolderCheckSettings;
+import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import de.uni_hildesheim.sse.submitter.svn.Revision;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
 
@@ -51,29 +56,19 @@ class ButtonListener implements ActionListener {
     
     @Override
     public void actionPerformed(ActionEvent evt) {
-        /*
-         * SE: According to https://docs.oracle.com/javase/8/docs/technotes/guides/language/strings-switch.html
-         * switch on Strings should be more efficient than if-else-blocks and I thing it's better readable
-         */
         switch (evt.getActionCommand()) {
         case ACTION_BROWSE_FOLDER:
             createFolderChooser();
             break;
-        case ACTION_SUBMIT:
-            parent.toggleButtons(false);
-            parent.addProgressAnimator((JButton) evt.getSource());
-            parent.clearLog();
-            parent.showInfoMessage(I18nProvider.getText("gui.log.submitting"));
             
-            new Thread(() -> {
-                model.submit();
-                SwingUtilities.invokeLater(() -> parent.toggleButtons(true));
-            }).start();
+        case ACTION_SUBMIT:
+            submit(evt);
             
             break;
         case ACTION_REPLAY:
             openReplayDialog(evt);
             break;
+            
         case ACTION_HISTORY:
             parent.clearLog();
             parent.toggleButtons(false);
@@ -86,8 +81,8 @@ class ButtonListener implements ActionListener {
                 }
                 SwingUtilities.invokeLater(() -> parent.toggleButtons(true));
             }).start();
-            
             break;
+            
         case ACTION_REVIEW:
             parent.clearLog();
             if (model.getDirectoryToSubmit() == null) { // TODO
@@ -102,9 +97,62 @@ class ButtonListener implements ActionListener {
                     
             }
             break;
+            
         default:
             LOGGER.error("Unknown action command: {}", evt.getActionCommand());
             break;
+        }
+    }
+    
+    /**
+     * Handles the submit button being pressed.
+     * 
+     * @param evt The event of the button-press.
+     */
+    private void submit(ActionEvent evt) {
+        parent.toggleButtons(false);
+        parent.addProgressAnimator((JButton) evt.getSource());
+        parent.clearLog();
+        
+        boolean submit = true;
+        
+        try {
+            FolderCheck checker = new FolderCheck(model.getDirectoryToSubmit());
+            
+            String warningMessage = null;
+            
+            FolderCheckSettings settings = ToolSettings.getConfig().getFolderCheckSettings();
+            if (checker.getTotalSize() > settings.getMaxSize()) {
+                warningMessage = I18nProvider.getText("warnings.folder_too_large",
+                        FileUtils.byteCountToDisplaySize(checker.getTotalSize()));
+                
+            } else if (checker.getNumJavaFiles() < settings.getMinJavaFiles()) {
+                warningMessage = I18nProvider.getText("warnings.too_few_java_files", checker.getNumJavaFiles());
+                
+            } else if (checker.getNumFiles() < settings.getMinFiles()
+                    || checker.getNumFiles() > settings.getMaxFiles()) {
+                warningMessage = I18nProvider.getText("warnings.file_count", checker.getNumFiles());
+            }
+            
+            if (warningMessage != null) {
+                warningMessage += "\n" + I18nProvider.getText("warnings.submit.are_you_sure");
+                submit = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(parent, warningMessage,
+                        I18nProvider.getText("warnings.title"), JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
+            }
+            
+        } catch (IOException e) {
+            LOGGER.warn("Exception while checking submission folder", e);
+        }
+        
+        if (submit) {
+            parent.showInfoMessage(I18nProvider.getText("gui.log.submitting"));
+            
+            new Thread(() -> {
+                model.submit();
+                SwingUtilities.invokeLater(() -> parent.toggleButtons(true));
+            }).start();
+        } else {
+            parent.toggleButtons(true);
         }
     }
 

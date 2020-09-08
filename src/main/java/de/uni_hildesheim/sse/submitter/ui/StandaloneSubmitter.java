@@ -44,7 +44,9 @@ public class StandaloneSubmitter {
     
     private boolean loggedIn;
     
-    private ISubmissionOutputHandler outputHandler;
+    private ISubmissionOutputHandler outputHandler; // TODO: replace with modelListener
+    
+    private IStandaloneSubmitterListener modelListener;
 
     /**
      * Creates a {@link StandaloneSubmitter}.
@@ -66,6 +68,15 @@ public class StandaloneSubmitter {
      */
     public void setOutputHandler(ISubmissionOutputHandler outputHandler) {
         this.outputHandler = outputHandler;
+    }
+    
+    /**
+     * Sets the listener for events created by this model.
+     * 
+     * @param modelListener A listener for the events of this model.
+     */
+    public void setModelListener(IStandaloneSubmitterListener modelListener) {
+        this.modelListener = modelListener;
     }
     
     /**
@@ -243,6 +254,7 @@ public class StandaloneSubmitter {
      */
     public void setDirectoryToSubmit(File directory) {
         this.submissionConfiguration.setProjectFolder(directory);
+        this.modelListener.onSubmissionDirectoryChanged(directory);
     }
     
     /**
