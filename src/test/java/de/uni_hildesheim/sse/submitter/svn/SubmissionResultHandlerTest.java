@@ -242,7 +242,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.NO_EXERCISE_FOUND, "some/local/directory");
         
-        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, true), "some submission");
+        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, true, 0), "some submission");
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.exercise_not_found",
@@ -257,7 +257,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.NO_EXERCISE_FOUND, "some/local/directory");
         
-        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false), "some submission");
+        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false, 0), "some submission");
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.exercise_not_found",
@@ -272,7 +272,7 @@ public class SubmissionResultHandlerTest implements ISubmissionOutputHandler {
         
         SubmitException exception = new SubmitException(ErrorType.NO_EXERCISE_FOUND, "some/local/directory");
         
-        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false), null);
+        handler.handleCommitException(exception, new Assignment("Assignment_name", "Some ID", State.SUBMISSION, false, 0), null);
         
         assertEquals(Arrays.asList(
                 new Message("error", I18nProvider.getText("submission.error.exercise_not_found",
