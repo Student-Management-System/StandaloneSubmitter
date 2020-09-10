@@ -63,8 +63,8 @@ class ButtonListener implements ActionListener {
             
         case ACTION_SUBMIT:
             submit(evt);
-            
             break;
+            
         case ACTION_REPLAY:
             openReplayDialog(evt);
             break;
@@ -88,11 +88,13 @@ class ButtonListener implements ActionListener {
             if (model.getDirectoryToSubmit() == null) { // TODO
                 parent.showErrorMessage(I18nProvider.getText("gui.error.no_path_given"));
             } else {
-                List<Assignment> assignments = model.getAssignmentsInReviewedState();
-                if (assignments == null || assignments.size() == 0) {
-                    parent.showInfoMessage(I18nProvider.getText("gui.error.no_review_repos"));
-                } else {
-                    new ReviewDialog(parent, model, assignments);
+                if (checkFolderEmptyForReplay(model.getDirectoryToSubmit())) {
+                    List<Assignment> assignments = model.getAssignmentsInReviewedState();
+                    if (assignments == null || assignments.size() == 0) {
+                        parent.showInfoMessage(I18nProvider.getText("gui.error.no_review_repos"));
+                    } else {
+                        new ReviewDialog(parent, model, assignments);
+                    }
                 }
                     
             }
@@ -105,19 +107,18 @@ class ButtonListener implements ActionListener {
     }
     
     /**
-     * Handles the submit button being pressed.
+     * Checks that the submission folder seems sane (e.g. number of files and total size). Asks the user for
+     * confirmation if the folder seems unusual.
      * 
-     * @param evt The event of the button-press.
+     * @param folder The folder to be submitted that should be checked.
+     * 
+     * @return <code>true</code> if the folder seems sane or if the user explicitly confirmed the selection.
      */
-    private void submit(ActionEvent evt) {
-        parent.toggleButtons(false);
-        parent.addProgressAnimator((JButton) evt.getSource());
-        parent.clearLog();
-        
+    private boolean checkSubmissionFolder(File folder) {
         boolean submit = true;
         
         try {
-            FolderCheck checker = new FolderCheck(model.getDirectoryToSubmit());
+            FolderCheck checker = new FolderCheck(folder);
             
             String warningMessage = null;
             
@@ -144,7 +145,20 @@ class ButtonListener implements ActionListener {
             LOGGER.warn("Exception while checking submission folder", e);
         }
         
-        if (submit) {
+        return submit;
+    }
+    
+    /**
+     * Handles the submit button being pressed.
+     * 
+     * @param evt The event of the button-press.
+     */
+    private void submit(ActionEvent evt) {
+        parent.toggleButtons(false);
+        parent.addProgressAnimator((JButton) evt.getSource());
+        parent.clearLog();
+        
+        if (checkSubmissionFolder(model.getDirectoryToSubmit())) {
             parent.showInfoMessage(I18nProvider.getText("gui.log.submitting"));
             
             new Thread(() -> {
@@ -154,6 +168,35 @@ class ButtonListener implements ActionListener {
         } else {
             parent.toggleButtons(true);
         }
+    }
+    
+    /**
+     * Checks that the given folder is empty, so that a replay (or review) can be checked into it. If the folder is not
+     * empty, asks the user to confirm that the contents will be deleted.
+     * 
+     * @param folder The folder to check.
+     * 
+     * @return <code>true</code> if the folder is empty or the user explicitly confirmed the deletion.
+     */
+    private boolean checkFolderEmptyForReplay(File folder) {
+        boolean allowed = true;
+        
+        try {
+            FolderCheck checker = new FolderCheck(folder);
+            
+            if (checker.getNumFiles() > 0) {
+                String warningMessage = I18nProvider.getText("warnings.checkout.overrides_non_empty_folder",
+                        checker.getNumFiles()) + "\n" + I18nProvider.getText("warnings.checkout.are_you_sure");
+                
+                allowed = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(parent, warningMessage,
+                        I18nProvider.getText("warnings.title"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            }
+            
+        } catch (IOException e) {
+            LOGGER.warn("Exception while checking checkout destination folder", e);
+        }
+        
+        return allowed;
     }
 
     /**
@@ -168,15 +211,11 @@ class ButtonListener implements ActionListener {
         } else {
             parent.toggleButtons(false);
             parent.addProgressAnimator((JButton) evt.getSource());
-            int result = JOptionPane.showConfirmDialog(parent, I18nProvider.getText("gui.warning.delete_dir_on_replay"),
-                    I18nProvider.getText("gui.elements.replay"), JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.OK_OPTION) {
+            
+            if (checkFolderEmptyForReplay(model.getDirectoryToSubmit())) {
                 new ReplayDialog(parent, model);
-                parent.toggleButtons(true);
-            } else {
-                parent.toggleButtons(true);
             }
+            parent.toggleButtons(true);
         }
     }
 
