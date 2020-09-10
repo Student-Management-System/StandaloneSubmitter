@@ -2,8 +2,6 @@ package de.uni_hildesheim.sse.submitter.io;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 
 /**
  * A class for checking a submission folder, e.g. size and number of files (recursively, including all sub-folders).
@@ -24,7 +22,7 @@ public class FolderCheck {
      * @param directory The folder to check.
      * @throws IOException If reading the directory information fails.
      */
-    public FolderCheck(File directory) throws IOException {
+    public FolderCheck(File directory) {
         init(directory);
     }
     
@@ -35,17 +33,22 @@ public class FolderCheck {
      * 
      * @throws IOException If reading the directory information fails.
      */
-    private void init(File directory) throws IOException {
-        Files.walk(directory.toPath())
-            .filter((path) -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))
-            .forEach((path) -> {
-                File file = path.toFile();
-                numFiles++;
-                if (file.getName().endsWith(".java")) {
-                    numJavaFiles++;
+    private void init(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    numFiles++;
+                    totalSize += file.length();
+                    if (file.getName().endsWith(".java")) {
+                        numJavaFiles++;
+                    }
+                    
+                } else {
+                    init(file);
                 }
-                totalSize += file.length();
-            });
+            }
+        }
     }
     
     /**
