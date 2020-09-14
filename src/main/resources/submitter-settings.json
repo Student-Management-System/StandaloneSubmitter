@@ -2,7 +2,7 @@
   "programName": "Exercise Submitter",
   "programVersion": "2.0.0",
 
-  "mgmtURL": "http://147.172.178.137:3000",
+  "mgmtURL": "http://147.172.178.137:8080/stmgmt",
   "authURL": "http://147.172.178.137:8080",
   "course" : {
     "course" : "java",
