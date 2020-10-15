@@ -33,24 +33,21 @@ public class ReviewDialogTest {
     
     private StandaloneSubmitter model;
     
-    private StandaloneSubmitterWindow parent;
-    
     private boolean throwServerNotFound;
     
     @Test
     @DisplayName("has correct title")
-    public void test() {
+    public void test() throws InterruptedException {
         assertEquals(I18nProvider.getText("gui.elements.select_correction_replay"), fixture.target().getTitle());
     }
     
     @BeforeEach
     public void createDialogFixture() {
         this.model = new StandaloneSubmitter(new TestConfiguration(), new TestProtocol());
-        this.parent = new StandaloneSubmitterWindow(model);
         List<Assignment> reviewedAssignments = new ArrayList<Assignment>();
         Assignment assignment = new Assignment("TestAssignment 001", "assignmentID", State.REVIEWED, false, 100);
         reviewedAssignments.add(assignment);
-        ReviewDialog dialog = GuiActionRunner.execute(() -> new ReviewDialog(parent, model, reviewedAssignments));
+        ReviewDialog dialog = GuiActionRunner.execute(() -> new ReviewDialog(null, model, reviewedAssignments));
         fixture = new DialogFixture(dialog);
         fixture.show();
     }
