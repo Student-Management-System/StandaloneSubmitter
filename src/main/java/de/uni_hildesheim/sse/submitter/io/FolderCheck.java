@@ -1,7 +1,6 @@
 package de.uni_hildesheim.sse.submitter.io;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * A class for checking a submission folder, e.g. size and number of files (recursively, including all sub-folders).
@@ -20,7 +19,6 @@ public class FolderCheck {
      * Creates a {@link FolderCheck} for the given directory.
      * 
      * @param directory The folder to check.
-     * @throws IOException If reading the directory information fails.
      */
     public FolderCheck(File directory) {
         init(directory);
@@ -30,8 +28,6 @@ public class FolderCheck {
      * Initializes the data for the given folder. Results are stored in attributes of this object.
      * 
      * @param directory The folder to check.
-     * 
-     * @throws IOException If reading the directory information fails.
      */
     private void init(File directory) {
         File[] files = directory.listFiles();

@@ -2,8 +2,8 @@
   "programName": "Exercise Submitter",
   "programVersion": "2.0.0",
 
-  "mgmtURL": "http://147.172.178.153:8080/stmgmt",
-  "authURL": "http://147.172.178.153:8080",
+  "mgmtURL": "https://authenticate.sse.uni-hildesheim.de/stmgmt",
+  "authURL": "https://authenticate.sse.uni-hildesheim.de",
   "course" : {
     "course" : "java",
     "semester": "wise2021",
@@ -11,7 +11,7 @@
     "teamMail": "programmierung1@uni-hildesheim.de"
   },
 
-  "repositoryURL": "http://147.172.178.136/javaI/abgabe/",
+  "repositoryURL": "https://praktikum.sse.uni-hildesheim.de/javaI/abgabe/",
   "messageTranslations": {
     "No Java files found": "errors.messages.no_java_submitted",
     "An internal error occurred": "errors.messages.unknownError",
