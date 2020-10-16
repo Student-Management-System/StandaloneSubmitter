@@ -2,8 +2,6 @@ package de.uni_hildesheim.sse.submitter.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.condition.DisabledIf;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
-import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException;
 import net.ssehub.exercisesubmitter.protocol.backend.UnknownCredentialsException;
 import net.ssehub.exercisesubmitter.protocol.frontend.Assignment;
@@ -26,8 +23,6 @@ import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 @DisabledIf("java.awt.GraphicsEnvironment#isHeadless")
 public class ReviewDialogTest {
-
-    private static final File TEST_SVN_REPO = new File("src/test/resources/svnRepo");
     
     private DialogFixture fixture;
     
@@ -37,7 +32,7 @@ public class ReviewDialogTest {
     
     @Test
     @DisplayName("has correct title")
-    public void test() throws InterruptedException {
+    public void testTitle() {
         assertEquals(I18nProvider.getText("gui.elements.select_correction_replay"), fixture.target().getTitle());
     }
     
@@ -55,14 +50,7 @@ public class ReviewDialogTest {
     @AfterEach
     public void cleanupFixture() {
         fixture.cleanUp();
-    }
-    
-    @BeforeEach
-    public void initSettings() throws IOException {
-        ToolSettings.INSTANCE.init();
-        ToolSettings.getConfig().setRepositoryURL("file:///" + TEST_SVN_REPO.getAbsolutePath());
-    }
-    
+    }    
     
     private class TestConfiguration extends SubmissionConfiguration {
 
