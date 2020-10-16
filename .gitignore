@@ -1,3 +1,8 @@
 /target/
 /submission.conf
 /.checkstyle
+/out/
+/out_test/
+/reports/
+/bin/
+/build/
