@@ -176,14 +176,19 @@ public class StandaloneSubmitterWindow extends JFrame
         
         browseBtn = createButton(I18nProvider.getText("gui.elements.browse"),
                 ButtonListener.ACTION_BROWSE_FOLDER, listener);
+        browseBtn.setName("browseButton");
         replayBtn = createButton(I18nProvider.getText("gui.elements.replay"),
                 ButtonListener.ACTION_REPLAY, listener);
+        replayBtn.setName("replayButton");
         submitBtn = createButton(I18nProvider.getText("gui.elements.submit"),
                 ButtonListener.ACTION_SUBMIT, listener);
+        submitBtn.setName("submitButton");
         historyBtn = createButton(I18nProvider.getText("gui.elements.history"),
                 ButtonListener.ACTION_HISTORY, listener);
+        historyBtn.setName("historyButton");
         reviewBtn = createButton(I18nProvider.getText("gui.elements.review"),
                 ButtonListener.ACTION_REVIEW, listener);
+        reviewBtn.setName("reviewButton");
     }
     
     /**
