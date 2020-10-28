@@ -1,5 +1,6 @@
 package de.uni_hildesheim.sse.submitter.ui;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
 
+import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.settings.SubmissionConfiguration;
 import de.uni_hildesheim.sse.submitter.settings.ToolSettings;
 import net.ssehub.exercisesubmitter.protocol.backend.ServerNotFoundException;
@@ -35,6 +37,52 @@ public class StandaloneSubmitterWindowTest {
     public void testTitle() {
         assertEquals(ToolSettings.getConfig().getProgramName() + ' ' + ToolSettings.getConfig().getProgramVersion(),
                 fixture.target().getTitle());
+    }
+    
+    @Test
+    @DisplayName("browseButton exists")
+    public void testBrwoseButton() {
+        var browseBtn = fixture.button("browseButton");
+        
+        assertTrue(browseBtn.isEnabled());
+        assertEquals(I18nProvider.getText("gui.elements.browse"), browseBtn.text());
+    }
+    
+    @Test
+    @DisplayName("replayButton exists")
+    public void testReplayButton() {
+        var replayBtn = fixture.button("replayButton");
+        
+        assertTrue(replayBtn.isEnabled());
+        assertEquals(I18nProvider.getText("gui.elements.replay"), replayBtn.text());
+    }
+    
+    @Test
+    @DisplayName("submitButton exists")
+    public void testSubmitButton() {
+        var submitBtn = fixture.button("submitButton");
+        
+        assertTrue(submitBtn.isEnabled());
+        assertEquals(I18nProvider.getText("gui.elements.submit"), 
+                submitBtn.text());  
+    }
+    
+    @Test
+    @DisplayName("historyButton exists")
+    public void testHistoryButton() {
+        var historyBtn = fixture.button("historyButton");
+        
+        assertTrue(historyBtn.isEnabled());
+        assertEquals(I18nProvider.getText("gui.elements.history"), historyBtn.text());
+    }
+    
+    @Test
+    @DisplayName("reviewButton exists")
+    public void testReviewButton() {
+        var reviewBtn = fixture.button("reviewButton");
+        
+        assertTrue(reviewBtn.isEnabled());
+        assertEquals(I18nProvider.getText("gui.elements.review"), reviewBtn.text());
     }
     
     @BeforeEach
