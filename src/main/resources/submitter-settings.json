@@ -1,6 +1,6 @@
 {
   "programName": "Exercise Submitter",
-  "programVersion": "2.0.0",
+  "programVersion": "${version}",
 
   "mgmtURL": "https://authenticate.sse.uni-hildesheim.de/stmgmt",
   "authURL": "https://authenticate.sse.uni-hildesheim.de",
