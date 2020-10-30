@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>net.ssehub.teaching.exercise_submitter</groupId>
 	<artifactId>standalone-submitter</artifactId>
-	<version>2.0.1-SNAPSHOT</version>
+	<version>2.0.1</version>
 
 	<name>StandaloneSubmitter</name>
 	<description>Standalone version of the Java ExerciseSubmitter.</description>
@@ -26,7 +25,7 @@
 		<connection>scm:git:https://github.com/Student-Management-System/StandaloneSubmitter.git</connection>
 		<developerConnection>scm:git:https://github.com/Student-Management-System/StandaloneSubmitter.git</developerConnection>
 		<url>https://github.com/Student-Management-System/StandaloneSubmitter</url>
-		<tag>HEAD</tag>
+		<tag>standalone-submitter-2.0.1</tag>
 	</scm>
 
 	<properties>
