@@ -21,7 +21,9 @@ import org.tmatesoft.svn.core.wc.DefaultSVNCommitParameters;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNCommitClient;
 import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNStatusType;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
+import org.tmatesoft.svn.core.wc.SVNWCClient;
 
 import de.uni_hildesheim.sse.submitter.i18n.I18nProvider;
 import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
@@ -98,12 +100,9 @@ public class Submitter {
 
             // Prepare Commit
             numJavaFiles = prepareCommit(folder, checkoutFolder);
-            try {
-                clientManager.getWCClient().doAdd(checkoutFolder, true, false, false, SVNDepth.INFINITY, false, false);
-            } catch (SVNException e) {
-                LOGGER.error("Couldn't update working copy", e);
-                throw new SubmitException(ErrorType.DO_STATUS_NOT_POSSIBLE, null);
-            }
+            
+            // tell SVN about our changes
+            updateSvnStatus(checkoutFolder);
 
             // Commit exercise
             String commitMsg = I18nProvider.getText("submission.commit.exercise", user);
@@ -177,6 +176,38 @@ public class Submitter {
         } catch (IOException e) {
             LOGGER.error("Couldn't initalize temporary directory", e);
             throw new SubmitException(ErrorType.COULD_NOT_CREATE_TEMP_DIR, System.getProperty("java.io.tmpdir"));
+        }
+    }
+    
+    /**
+     * Updates the SVN status of the given checkout folder. Marks newly added files as added and deleted/missing files
+     * as deleted.
+     * 
+     * @param checkoutFolder The SVN checkout location to update.
+     * 
+     * @throws SubmitException If updating the status of the SVN checkout fails.
+     */
+    private void updateSvnStatus(File checkoutFolder) throws SubmitException {
+        try {
+            SVNWCClient wcClient = clientManager.getWCClient();
+            
+            clientManager.getStatusClient().doStatus(checkoutFolder, SVNRevision.HEAD, SVNDepth.INFINITY,
+                    false, false, false, false,
+                (status) -> {
+                    SVNStatusType type = status.getNodeStatus();
+                    File file = status.getFile();
+
+                    if (type == SVNStatusType.STATUS_UNVERSIONED) {
+                        wcClient.doAdd(file, true, false, false, SVNDepth.EMPTY, false, false);
+                        
+                    } else if (type == SVNStatusType.STATUS_MISSING) {
+                        wcClient.doDelete(file, true, false, false);
+                    }
+                }, null);
+            
+        } catch (SVNException e) {
+            LOGGER.error("Couldn't update working copy", e);
+            throw new SubmitException(ErrorType.DO_STATUS_NOT_POSSIBLE, null);
         }
     }
 
