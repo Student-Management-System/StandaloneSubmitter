@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -112,6 +111,35 @@ public class RemoteRepository {
      * @throws IOException if writing the files fails.
      */
     public void replay(long revision, File targetDirectory, String remotePath) throws SVNException, IOException {
+        replay(SVNRevision.create(revision), targetDirectory, remotePath);
+    }
+    
+    /**
+     * Get the current revision of the given exercise directory and save it in the given directory.
+     * 
+     * @param targetDirectory the path to the directory where to create the checkout. Contents will be deleted.
+     * @param remotePath The path of the submission to replay.
+     * 
+     * @throws SVNException if unable to get the current revision.
+     * @throws IOException if writing the files fails.
+     */
+    public void replay(File targetDirectory, String remotePath) throws SVNException, IOException {
+        replay(SVNRevision.HEAD, targetDirectory, remotePath);
+    }
+    
+    /**
+     * Get the given revision of the given exercise directory and save it in the given directory.
+     * 
+     * @param revision The revision to check out.
+     * @param targetDirectory the path to the directory where to create the checkout. Contents will be deleted.
+     * @param remotePath The path of the submission to replay.
+     * 
+     * @throws SVNException if unable to get the current revision.
+     * @throws IOException if writing the files fails.
+     */
+    private void replay(SVNRevision revision, File targetDirectory, String remotePath)
+            throws SVNException, IOException {
+        
         if (!targetDirectory.exists()) {
             if (!targetDirectory.mkdirs()) {
                 throw new IOException("Cannot create " + targetDirectory);
@@ -125,8 +153,7 @@ public class RemoteRepository {
         File tmpDir = Files.createTempDirectory("abgabe").toFile();
         try {
             SVNURL url = SVNURL.parseURIEncoded(svnUrl.toString() + "/" + remotePath);
-            clientManager.getUpdateClient().doCheckout(url, tmpDir,
-                    SVNRevision.create(revision), SVNRevision.create(revision), SVNDepth.INFINITY, true);
+            clientManager.getUpdateClient().doCheckout(url, tmpDir, revision, revision, SVNDepth.INFINITY, true);
             
             FileUtils.copyDirectory(tmpDir, targetDirectory, (file) ->
                     !file.getName().equals(FolderInitializer.CLASSPATH_FILE_NAME)
@@ -138,27 +165,6 @@ public class RemoteRepository {
         } finally {
             FileUtils.deleteQuietly(tmpDir);
         }
-    }
-    
-    /**
-     * Get the current revision of the given exercise directory and save it in the given directory.
-     * 
-     * @param targetDirectory the path to the directory where to create the checkout. Contents will be deleted.
-     * @param remotePath The path of the submission to replay.
-     * 
-     * @throws SVNException if unable to get the current revision.
-     * @throws IOException if writing the files fails.
-     */
-    public void replay(File targetDirectory, String remotePath) throws SVNException, IOException {
-        AtomicLong latestRevision = new AtomicLong();
-        
-        clientManager.getLogClient().doLog(svnUrl, new String[] {remotePath},
-                SVNRevision.HEAD, SVNRevision.HEAD, SVNRevision.HEAD, false, false, Integer.MAX_VALUE,
-            (logEntry) -> {
-                latestRevision.set(logEntry.getRevision());
-            });
-        
-        replay(latestRevision.get(), targetDirectory, remotePath);
     }
     
 }
