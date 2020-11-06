@@ -9,6 +9,7 @@ import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.DialogFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
@@ -22,6 +23,7 @@ import net.ssehub.exercisesubmitter.protocol.frontend.Assignment.State;
 import net.ssehub.exercisesubmitter.protocol.frontend.SubmitterProtocol;
 
 @DisabledIf("java.awt.GraphicsEnvironment#isHeadless")
+@Disabled("requires user input")
 public class ReviewDialogTest {
     
     private DialogFixture fixture;
