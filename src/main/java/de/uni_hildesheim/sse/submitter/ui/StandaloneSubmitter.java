@@ -222,7 +222,10 @@ public class StandaloneSubmitter {
             result = this.managementSystem.getOpenAssignments();
         } catch (NetworkException e) {
             LOGGER.error("Could not get open assignments", e);
-            outputHandler.showErrorMessage(I18nProvider.getText("gui.error.repos_not_found"));
+            String serverURL = ToolSettings.getConfig().getMgmtURL();
+            String course = ToolSettings.getConfig().getCourse().getCourse() + " - "
+                + ToolSettings.getConfig().getCourse().getSemester();
+            outputHandler.showErrorMessage(I18nProvider.getText("gui.error.no_assignments_found", serverURL, course));
             result = null;
         }
         return result;
