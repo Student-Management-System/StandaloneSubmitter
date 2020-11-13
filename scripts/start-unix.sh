@@ -1,3 +1,3 @@
 #!/bin/sh
 cd "$(dirname "$0")"
-java -jar ExerciseSubmitter.jar
+java --illegal-access=deny -jar ExerciseSubmitter.jar
