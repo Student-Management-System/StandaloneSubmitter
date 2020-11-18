@@ -26,6 +26,37 @@ import de.uni_hildesheim.sse.submitter.io.FolderInitializer;
  * @author El-Sharkawy
  */
 public class RemoteRepository {
+    
+    private static final int TIMEOUT_FOR_TEST_CONNECTION = 5000;
+    
+    /**
+     * Used to execute long running method <tt>repository.testConnection()</tt> in a thread which may be aborted
+     * to provide faster feedback to the users.
+     * @author El-Sharkawy
+     *
+     */
+    private class ConnectionTester extends Thread {
+        private SVNRepository repository;
+        private boolean connected = false;
+        
+        /**
+         * Creates a new Thread instance.
+         * @param repository The repository to which the connection shall be tested.
+         */
+        private ConnectionTester(SVNRepository repository) {
+            this.repository = repository;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                repository.testConnection();
+                connected = true;
+            } catch (SVNException e) {
+                LOGGER.error("Could not connect to sumbission server: " + svnUrl, e);
+            }
+        }
+    }
 
     private static final Logger LOGGER = LogManager.getLogger();
     
@@ -87,13 +118,27 @@ public class RemoteRepository {
         SVNRepository repository = null;
         try {
             repository = clientManager.createRepository(svnUrl, false);
-            repository.testConnection();
-            connected = true;
+            ConnectionTester test = new ConnectionTester(repository);
+            test.start();
+            try {
+                // Aborts the thread after the specified timeout (in milliseconds), if it doesn't stop earlier
+                test.join(TIMEOUT_FOR_TEST_CONNECTION);
+            } catch (InterruptedException e) {
+                LOGGER.warn("Exception occured while interrupting ConnectionTester-thread.", e);
+            }
+            connected = test.connected;
         } catch (SVNException e) {
             LOGGER.error("Could not connect to sumbission server: " + svnUrl, e);
         } finally {
             if (repository != null) {
-                repository.closeSession();
+                // Do this in a separate thread to avoid blocking
+                // As a result, stopping the application will delay, if testConnection wasn't successful
+                // However, the window will be disposed and, thus, the users won't notice this.
+                final SVNRepository tmpRepository = repository;
+                Thread closingThread = new Thread(() -> {
+                    tmpRepository.closeSession();
+                });
+                closingThread.start();
             }
         }
         
