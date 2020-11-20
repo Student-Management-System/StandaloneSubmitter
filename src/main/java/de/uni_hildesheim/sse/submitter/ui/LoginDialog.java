@@ -1,6 +1,7 @@
 package de.uni_hildesheim.sse.submitter.ui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -244,6 +245,9 @@ public class LoginDialog extends JDialog implements ActionListener {
                         dispose();
                     } else {
                         errorMessageLabel.setText(result);
+                        // 60% width of main Window 
+                        Dimension dim = new Dimension((int) (0.6 * parent.getSize().width), 80);
+                        errorMessageLabel.setPreferredSize(dim);
                         pack();
                         setLocationRelativeTo(parent);
                     }
